@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: bun_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bunuser
+      POSTGRES_PASSWORD: bunpass
+      POSTGRES_DB: bundb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - bun-network
+
+volumes:
+  pgdata:
+
+networks:
+  bun-network:
