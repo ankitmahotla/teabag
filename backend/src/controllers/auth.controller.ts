@@ -5,31 +5,35 @@ import { usersTable } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { generateTokens } from "../lib/tokens";
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const client = new OAuth2Client({
+  clientId: process.env.GOOGLE_CLIENT_ID!,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+  redirectUri: "postmessage",
+});
 
 export const signIn = async (req: Request, res: Response) => {
+  const { code } = req.body;
+
+  if (!code) {
+    return res.status(400).json({ error: "Missing authorization code" });
+  }
+
   try {
-    const { credential } = req.body;
+    const { tokens } = await client.getToken(code);
+    const idToken = tokens.id_token;
 
-    if (!credential) {
-      return res.status(400).json({ error: "Missing credential token" });
-    }
-
-    let payload;
-
-    try {
-      const ticket = await client.verifyIdToken({
-        idToken: credential,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
-      payload = ticket.getPayload();
-    } catch (verifyError) {
-      console.warn("Invalid Google token:", verifyError);
+    if (!idToken) {
       return res
-        .status(401)
-        .json({ error: "Invalid or malformed Google token" });
+        .status(400)
+        .json({ error: "Missing ID token in exchange response" });
     }
 
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
     if (!payload?.email || !payload?.sub) {
       return res.status(400).json({ error: "Incomplete token payload" });
     }
@@ -61,7 +65,11 @@ export const signIn = async (req: Request, res: Response) => {
         .where(eq(usersTable.id, user.id));
     }
 
-    const { accessToken, refreshToken } = generateTokens({ id: user?.id! });
+    if (!user?.id) {
+      return res.status(500).json({ error: "User ID is missing" });
+    }
+
+    const { accessToken, refreshToken } = generateTokens({ id: user.id });
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,

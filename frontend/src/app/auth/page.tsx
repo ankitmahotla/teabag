@@ -1,5 +1,6 @@
 "use client";
 import { ModeToggle } from "@/components/mode-toggle";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,21 +8,29 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { GoogleLogin } from "@react-oauth/google";
+
+import { useGoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 
 export default function SignIn() {
-  const handleLoginSuccess = async (credentialResponse) => {
-    try {
-      const res = await axios.post("http://localhost:8000/api/auth/sign-in", {
-        credential: credentialResponse.credential,
-      });
+  const login = useGoogleLogin({
+    flow: "auth-code",
+    onSuccess: async (response) => {
+      try {
+        const res = await axios.post("http://localhost:8000/api/auth/sign-in", {
+          code: response.code,
+        });
 
-      console.log("User info from backend:", res.data);
-    } catch (err) {
-      console.error("Login failed", err);
-    }
-  };
+        console.log("User info from backend:", res.data);
+      } catch (err) {
+        console.error("Login failed", err);
+      }
+    },
+    onError: () => {
+      console.log("Google Auth error");
+    },
+  });
+
   return (
     <div className="flex min-h-screen flex-col p-4">
       <div className="flex justify-end">
@@ -37,14 +46,11 @@ export default function SignIn() {
               Sign in with your Google account to continue
             </CardDescription>
           </CardHeader>
-          <CardContent className="w-full flex justify-center">
-            <GoogleLogin
-              onSuccess={handleLoginSuccess}
-              onError={() => {
-                console.log("Login Failed");
-              }}
-              logo_alignment="center"
-            />
+          <CardContent>
+            <Button onClick={() => login()} className="w-full">
+              {/* <img src="/google-icon.svg" className="h-5 w-5 mr-2" alt="Google" /> */}
+              Sign in with Google
+            </Button>
           </CardContent>
         </Card>
       </div>
