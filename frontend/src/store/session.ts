@@ -51,6 +51,7 @@ export const useSessionStore = create<SessionState & SessionActions>()(
       resetSession: async () => {
         useSessionStore.persist.clearStorage();
         set({ ...initialState });
+        await useSessionStore.persist.rehydrate();
       },
     }),
     {

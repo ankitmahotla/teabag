@@ -25,7 +25,7 @@ export default function PrivateLayout({
     // Todo: refresh token
   }
 
-  if (!isAuthenticated) return redirect("/auth");
+  if (!isAuthenticated) redirect("/auth");
 
   return (
     <SidebarProvider>
