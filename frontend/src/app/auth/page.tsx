@@ -1,4 +1,5 @@
 "use client";
+
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,28 +9,30 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useSessionStore } from "@/store/session";
+import { useSignInSync } from "@/sync/auth";
 
 import { useGoogleLogin } from "@react-oauth/google";
-import axios from "axios";
+import { redirect } from "next/navigation";
+import { toast } from "sonner";
 
 export default function SignIn() {
+  const { mutateAsync, isPending } = useSignInSync();
+  const { isAuthenticated } = useSessionStore();
+
   const login = useGoogleLogin({
     flow: "auth-code",
     onSuccess: async (response) => {
-      try {
-        const res = await axios.post("http://localhost:8000/api/auth/sign-in", {
-          code: response.code,
-        });
-
-        console.log("User info from backend:", res.data);
-      } catch (err) {
-        console.error("Login failed", err);
-      }
+      await mutateAsync({ code: response.code });
+      toast.success("Logged in successfully!");
+      redirect("/");
     },
     onError: () => {
-      console.log("Google Auth error");
+      toast.error("Google Auth error");
     },
   });
+
+  if (isAuthenticated) redirect("/");
 
   return (
     <div className="flex min-h-screen flex-col p-4">
@@ -47,7 +50,11 @@ export default function SignIn() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => login()} className="w-full">
+            <Button
+              disabled={isPending}
+              onClick={() => login()}
+              className="w-full"
+            >
               {/* <img src="/google-icon.svg" className="h-5 w-5 mr-2" alt="Google" /> */}
               Sign in with Google
             </Button>
