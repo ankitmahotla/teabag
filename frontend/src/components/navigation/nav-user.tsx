@@ -18,18 +18,16 @@ import {
 import _ from "lodash";
 import { ChevronsUpDown, Moon } from "lucide-react";
 import { useSignOutSync } from "@/sync/auth";
-import { redirect } from "next/navigation";
 import { useSessionStore } from "@/store/session";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
   const { user } = useSessionStore();
-  const { mutateAsync, isPending } = useSignOutSync();
+  const { mutate, isPending } = useSignOutSync();
 
   const onLogout = async () => {
     if (isPending) return;
-    await mutateAsync();
-    redirect("/auth");
+    mutate();
   };
 
   return (
