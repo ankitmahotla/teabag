@@ -2,8 +2,10 @@ import express from "express";
 import multer from "multer";
 import { uploadStudentCSV } from "../controllers/admin.controller";
 import { isAdmin } from "../middlewares/admin.middleware";
+import { authenticate } from "../middlewares/auth.middleware";
 
 const tempDir = "./tmp";
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, tempDir),
   filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
@@ -16,8 +18,9 @@ const upload = multer({
 
 const router = express.Router();
 
+router.use(authenticate);
 router.use(isAdmin);
 
-router.post("/upload-students", upload.single("file"), uploadStudentCSV);
+router.post("/upload-csv", upload.single("file"), uploadStudentCSV);
 
 export default router;

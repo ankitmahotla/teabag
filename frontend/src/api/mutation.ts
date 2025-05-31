@@ -1,3 +1,4 @@
+import axios from "axios";
 import { API } from "./client";
 
 export const SIGN_IN = async ({ code }: { code: string }) => {
@@ -14,4 +15,12 @@ export const SIGN_OUT = async () => {
 
 export const REFRESH_TOKENS = async () => {
   return (await API.post("/api/auth/refresh-tokens")).data;
+};
+
+export const UPLOAD_CSV = async (formData: FormData) => {
+  return (
+    await axios.post("http://localhost:8000/api/admin/upload-csv", formData, {
+      withCredentials: true,
+    })
+  ).data;
 };

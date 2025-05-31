@@ -1,7 +1,6 @@
 "use client";
-import { Button } from "@/components/ui/button";
+import CsvUploadForm from "@/components/forms/csv-upload";
 import { useSessionStore } from "@/store/session";
-import { UploadCloud } from "lucide-react";
 import { redirect } from "next/navigation";
 
 export default function AdminPage() {
@@ -13,9 +12,7 @@ export default function AdminPage() {
     <div>
       <div className="flex items-start justify-between">
         <h1>Admin Page</h1>
-        <Button>
-          <UploadCloud size={16} /> Student CSV
-        </Button>
+        <CsvUploadForm />
       </div>
     </div>
   );
