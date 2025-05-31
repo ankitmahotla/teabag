@@ -1,10 +1,16 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+enum Role {
+  ADMIN = "admin",
+  USER = "user",
+}
+
 type User = {
   id: string;
   email: string;
   name?: string;
+  role: Role;
 };
 
 type SessionState = {

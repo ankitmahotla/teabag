@@ -86,7 +86,14 @@ export const signIn = async (req: Request, res: Response) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return res.status(200).json({ user });
+    return res.status(200).json({
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user?.name,
+        role: user.role,
+      },
+    });
   } catch (e) {
     console.error("Google sign-in error:", e);
     return res.status(500).json({ error: "Internal server error" });
@@ -157,7 +164,14 @@ export const refreshTokens = async (req: Request, res: Response) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return res.status(200).json({ user });
+    return res.status(200).json({
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user?.name,
+        role: user.role,
+      },
+    });
   } catch (e) {
     console.error("Token refresh failed:", e);
     return res.status(500).json({ error: "Internal server error" });
