@@ -11,3 +11,7 @@ export const SIGN_IN = async ({ code }: { code: string }) => {
 export const SIGN_OUT = async () => {
   return (await API.post("/api/auth/sign-out")).data;
 };
+
+export const REFRESH_TOKENS = async () => {
+  return (await API.post("/api/auth/refresh-tokens")).data;
+};

@@ -1,4 +1,4 @@
-import { SIGN_IN, SIGN_OUT } from "@/api/mutation";
+import { REFRESH_TOKENS, SIGN_IN, SIGN_OUT } from "@/api/mutation";
 import { useSessionStore } from "@/store/session";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -31,6 +31,21 @@ export const useSignOutSync = () => {
     },
     onError: () => {
       toast.error("Failed to sign out");
+    },
+  });
+};
+
+export const useRefreshTokensSync = () => {
+  const { refreshSession, resetSession } = useSessionStore();
+
+  return useMutation({
+    mutationFn: REFRESH_TOKENS,
+    onSuccess: () => {
+      refreshSession();
+    },
+    onError: () => {
+      resetSession();
+      toast.error("Failed to refresh tokens");
     },
   });
 };

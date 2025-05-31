@@ -5,25 +5,26 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { redirect } from "next/navigation";
 import { useSessionStore } from "@/store/session";
 import { Spinner } from "@/components/spinner";
+import { useRefreshTokensSync } from "@/sync/auth";
+import { useEffect } from "react";
 
 export default function PrivateLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, hasHydrated } = useSessionStore();
-  const hasExpiredToken = useSessionStore(
-    (state) => state.expiresAt !== null && Date.now() > state.expiresAt,
-  );
+  const { isAuthenticated, hasHydrated, expiresAt } = useSessionStore();
+  const { mutate, isPending } = useRefreshTokensSync();
 
-  if (!hasHydrated) return <Spinner />;
+  const hasExpiredToken = expiresAt !== null && Date.now() > expiresAt;
 
-  if (hasExpiredToken) {
-    // mutate({
-    //   refresh_token: tokens?.RefreshToken as string,
-    // });
-    // Todo: refresh token
-  }
+  useEffect(() => {
+    if (hasExpiredToken && !isPending) {
+      mutate();
+    }
+  }, [hasExpiredToken, isPending, mutate]);
+
+  if (!hasHydrated || isPending) return <Spinner />;
 
   if (!isAuthenticated) redirect("/auth");
 
