@@ -45,21 +45,24 @@ export const signIn = asyncHandler(async (req: Request, res: Response) => {
     const [existingUser] = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.googleId, googleId));
+      .where(eq(usersTable.email, email));
 
     let user = existingUser;
 
     if (!user) {
-      const [newUser] = await db
-        .insert(usersTable)
-        .values({
+      return res
+        .status(500)
+        .json({ error: "User not part of chaicode platform" });
+    } else if (user.lastLoginAt === null) {
+      await db
+        .update(usersTable)
+        .set({
           googleId,
           email,
           name,
+          lastLoginAt: new Date(),
         })
-        .returning();
-
-      user = newUser;
+        .where(eq(usersTable.id, user.id));
     } else {
       await db
         .update(usersTable)
