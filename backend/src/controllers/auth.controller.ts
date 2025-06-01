@@ -4,7 +4,8 @@ import { db } from "../db";
 import { usersTable } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { generateTokens } from "../lib/tokens";
-import { verifyToken } from "../utils/verifyToken";
+import { verifyToken } from "../utils/verify-token";
+import { asyncHandler } from "../utils/async-handler";
 
 const client = new OAuth2Client({
   clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -12,7 +13,7 @@ const client = new OAuth2Client({
   redirectUri: "postmessage",
 });
 
-export const signIn = async (req: Request, res: Response) => {
+export const signIn = asyncHandler(async (req: Request, res: Response) => {
   const { code } = req.body;
 
   if (!code) {
@@ -98,9 +99,9 @@ export const signIn = async (req: Request, res: Response) => {
     console.error("Google sign-in error:", e);
     return res.status(500).json({ error: "Internal server error" });
   }
-};
+});
 
-export const signOut = async (req: Request, res: Response) => {
+export const signOut = asyncHandler(async (req: Request, res: Response) => {
   const { refreshToken } = req.cookies;
 
   if (!refreshToken) {
@@ -125,55 +126,57 @@ export const signOut = async (req: Request, res: Response) => {
     console.error("Logout failed:", e);
     return res.status(500).json({ error: "Internal server error" });
   }
-};
+});
 
-export const refreshTokens = async (req: Request, res: Response) => {
-  const { refreshToken } = req.cookies;
+export const refreshTokens = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { refreshToken } = req.cookies;
 
-  if (!refreshToken) {
-    return res.status(400).json({ error: "Missing refresh token" });
-  }
-
-  const token = refreshToken;
-
-  try {
-    const { id } = verifyToken(token);
-
-    const [user] = await db
-      .select()
-      .from(usersTable)
-      .where(eq(usersTable.id, id));
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
+    if (!refreshToken) {
+      return res.status(400).json({ error: "Missing refresh token" });
     }
 
-    const { accessToken, refreshToken } = generateTokens({ id: user.id });
+    const token = refreshToken;
 
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      maxAge: 60 * 60 * 1000,
-    });
+    try {
+      const { id } = verifyToken(token);
 
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+      const [user] = await db
+        .select()
+        .from(usersTable)
+        .where(eq(usersTable.id, id));
 
-    return res.status(200).json({
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user?.name,
-        role: user.role,
-      },
-    });
-  } catch (e) {
-    console.error("Token refresh failed:", e);
-    return res.status(500).json({ error: "Internal server error" });
-  }
-};
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const { accessToken, refreshToken } = generateTokens({ id: user.id });
+
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+        maxAge: 60 * 60 * 1000,
+      });
+
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      return res.status(200).json({
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user?.name,
+          role: user.role,
+        },
+      });
+    } catch (e) {
+      console.error("Token refresh failed:", e);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  },
+);
