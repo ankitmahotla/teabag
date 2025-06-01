@@ -34,6 +34,8 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.0",
     "pg": "^8.16.0",
-    "strip-bom-stream": "^5.0.0"
+    "strip-bom-stream": "^5.0.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   }
 }
