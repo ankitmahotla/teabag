@@ -15,7 +15,6 @@ export const useSignInSync = () => {
     },
     onError: () => {
       resetSession();
-      toast.error("Failed to sign in");
     },
   });
 };

@@ -17,17 +17,14 @@ import { redirect } from "next/navigation";
 import { toast } from "sonner";
 
 export default function SignIn() {
-  const { mutate, isPending } = useSignInSync();
+  const { mutateAsync, isPending } = useSignInSync();
   const { isAuthenticated } = useSessionStore();
 
   const login = useGoogleLogin({
     flow: "auth-code",
-    onSuccess: (response) => {
-      mutate({ code: response.code });
+    onSuccess: async (response) => {
+      await mutateAsync({ code: response.code });
       toast.success("Logged in successfully!");
-    },
-    onError: () => {
-      toast.error("Google Auth error");
     },
   });
 
