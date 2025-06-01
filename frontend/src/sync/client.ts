@@ -8,22 +8,16 @@ export const queryClient = new QueryClient({
     },
   },
   queryCache: new QueryCache({
-    onError: (error: any) => {
-      const message =
-        error?.response?.data?.error || error.message || "Something went wrong";
-
-      toast("Error", {
-        description: message,
+    onError: (error) => {
+      toast(error.name, {
+        description: error.message,
       });
     },
   }),
   mutationCache: new MutationCache({
-    onError: (error: any) => {
-      const message =
-        error?.response?.data?.error || error.message || "Something went wrong";
-
-      toast("Error", {
-        description: message,
+    onError: (error) => {
+      toast(error.name, {
+        description: error.message,
       });
     },
   }),
