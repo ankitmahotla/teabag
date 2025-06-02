@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { OAuth2Client } from "google-auth-library";
 import { db } from "../db";
-import { usersTable } from "../db/schema";
+import { users } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { generateTokens } from "../lib/tokens";
 import { verifyToken } from "../utils/verify-token";
@@ -44,8 +44,8 @@ export const signIn = asyncHandler(async (req: Request, res: Response) => {
 
     const [existingUser] = await db
       .select()
-      .from(usersTable)
-      .where(eq(usersTable.email, email));
+      .from(users)
+      .where(eq(users.email, email));
 
     let user = existingUser;
 
@@ -55,19 +55,19 @@ export const signIn = asyncHandler(async (req: Request, res: Response) => {
         .json({ error: "User not part of chaicode platform" });
     } else if (user.lastLoginAt === null) {
       await db
-        .update(usersTable)
+        .update(users)
         .set({
           googleId,
           email,
           name,
           lastLoginAt: new Date(),
         })
-        .where(eq(usersTable.id, user.id));
+        .where(eq(users.id, user.id));
     } else {
       await db
-        .update(usersTable)
+        .update(users)
         .set({ lastLoginAt: new Date() })
-        .where(eq(usersTable.id, user.id));
+        .where(eq(users.id, user.id));
     }
 
     if (!user) {
@@ -144,10 +144,7 @@ export const refreshTokens = asyncHandler(
     try {
       const { id } = verifyToken(token);
 
-      const [user] = await db
-        .select()
-        .from(usersTable)
-        .where(eq(usersTable.id, id));
+      const [user] = await db.select().from(users).where(eq(users.id, id));
 
       if (!user) {
         return res.status(404).json({ error: "User not found" });

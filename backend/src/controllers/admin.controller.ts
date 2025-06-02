@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import fs from "fs/promises";
 import { parseCSV } from "../utils/parse-csv";
 import { db } from "../db";
-import { usersTable } from "../db/schema";
+import { users } from "../db/schema";
 import { asyncHandler } from "../utils/async-handler";
 
 export const uploadStudentCSV = asyncHandler(
@@ -18,7 +18,7 @@ export const uploadStudentCSV = asyncHandler(
 
       const emailRows = uniqueEmails.map((email: string) => ({ email }));
 
-      await db.insert(usersTable).values(emailRows).onConflictDoNothing();
+      await db.insert(users).values(emailRows).onConflictDoNothing();
 
       return res
         .status(200)

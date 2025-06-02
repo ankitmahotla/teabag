@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { db } from "../db";
-import { usersTable } from "../db/schema";
+import { users } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { verifyToken } from "../utils/verify-token";
 import { asyncHandler } from "../utils/async-handler";
@@ -24,10 +24,7 @@ export const authenticate = asyncHandler(
     try {
       const { id } = verifyToken(token);
 
-      const [user] = await db
-        .select()
-        .from(usersTable)
-        .where(eq(usersTable.id, id));
+      const [user] = await db.select().from(users).where(eq(users.id, id));
 
       if (!user) {
         return res.status(401).json({ error: "Invalid token" });
