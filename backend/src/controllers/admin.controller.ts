@@ -21,9 +21,6 @@ export const uploadStudentCSV = asyncHandler(
       const cohortRows = uniqueCohorts.map((cohort: string) => ({
         name: cohort,
       }));
-      // const emailCohortRows = emailCohortRelationships.map(
-      //   ([email, cohort]) => ({ email, cohort }),
-      // );
 
       const uploadedUsers = await db
         .insert(users)

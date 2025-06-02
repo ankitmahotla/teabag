@@ -4,7 +4,7 @@
  *   post:
  *     summary: Upload a CSV file of student emails
  *     description: |
- *       Uploads a CSV file containing student email addresses, parses it, and adds unique emails to the database.
+ *       Uploads a CSV file containing student emails and batch name, and parses it, and adds unique emails, cohorts and unique userCohortRelationships to the database.
  *       Requires an authenticated admin session (via HTTP-only cookies).
  *     tags:
  *       - Admin
