@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import fs from "fs/promises";
 import { parseCSV } from "../utils/parse-csv";
 import { db } from "../db";
-import { users } from "../db/schema";
+import { cohortMemberships, cohorts, users } from "../db/schema";
 import { asyncHandler } from "../utils/async-handler";
 
 export const uploadStudentCSV = asyncHandler(
@@ -14,11 +14,44 @@ export const uploadStudentCSV = asyncHandler(
     }
 
     try {
-      const uniqueEmails = await parseCSV(file.path);
+      const { uniqueEmails, uniqueCohorts, emailCohortRelationships } =
+        await parseCSV(file.path);
 
       const emailRows = uniqueEmails.map((email: string) => ({ email }));
+      const cohortRows = uniqueCohorts.map((cohort: string) => ({
+        name: cohort,
+      }));
+      // const emailCohortRows = emailCohortRelationships.map(
+      //   ([email, cohort]) => ({ email, cohort }),
+      // );
 
-      await db.insert(users).values(emailRows).onConflictDoNothing();
+      const uploadedUsers = await db
+        .insert(users)
+        .values(emailRows)
+        .onConflictDoNothing()
+        .returning();
+
+      const uploadedCohorts = await db
+        .insert(cohorts)
+        .values(cohortRows)
+        .onConflictDoNothing()
+        .returning();
+
+      for (const item of emailCohortRelationships) {
+        const userId = uploadedUsers.find(
+          (user) => user.email === item.email,
+        )?.id;
+        const cohortId = uploadedCohorts.find(
+          (cohort) => cohort.name === item.cohort,
+        )?.id;
+
+        if (userId && cohortId) {
+          await db
+            .insert(cohortMemberships)
+            .values({ userId, cohortId })
+            .onConflictDoNothing();
+        }
+      }
 
       return res
         .status(200)
