@@ -29,7 +29,7 @@ export const users = pgTable("users", {
 
 export const cohorts = pgTable("cohorts", {
   id: uuid("id").defaultRandom().primaryKey(),
-  name: text("name").notNull(),
+  name: text("name").unique().notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

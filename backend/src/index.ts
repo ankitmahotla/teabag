@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import authRoutes from "./routes/auth.route";
 import adminRoutes from "./routes/admin.route";
+import cohortRoutes from "./routes/cohort.route";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./docs/swagger";
 import type { CorsOptions } from "cors";
@@ -34,6 +35,7 @@ app.use(cookieParser());
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/cohorts", cohortRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

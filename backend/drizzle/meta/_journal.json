@@ -15,6 +15,13 @@
       "when": 1748780348561,
       "tag": "0001_strange_kang",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1748925716310,
+      "tag": "0002_cynical_shadow_king",
+      "breakpoints": true
     }
   ]
 }

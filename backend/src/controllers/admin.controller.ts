@@ -4,6 +4,7 @@ import { parseCSV } from "../utils/parse-csv";
 import { db } from "../db";
 import { cohortMemberships, cohorts, users } from "../db/schema";
 import { asyncHandler } from "../utils/async-handler";
+import { inArray } from "drizzle-orm";
 
 export const uploadStudentCSV = asyncHandler(
   async (req: Request, res: Response) => {
@@ -22,11 +23,23 @@ export const uploadStudentCSV = asyncHandler(
         name: cohort,
       }));
 
+      let existingUsers = await db
+        .select()
+        .from(users)
+        .where(inArray(users.email, uniqueEmails));
+
       const uploadedUsers = await db
         .insert(users)
         .values(emailRows)
         .onConflictDoNothing()
         .returning();
+
+      existingUsers.push(...uploadedUsers);
+
+      let existingCohorts = await db
+        .select()
+        .from(cohorts)
+        .where(inArray(cohorts.name, uniqueCohorts));
 
       const uploadedCohorts = await db
         .insert(cohorts)
@@ -34,15 +47,18 @@ export const uploadStudentCSV = asyncHandler(
         .onConflictDoNothing()
         .returning();
 
+      existingCohorts.push(...uploadedCohorts);
+
       for (const item of emailCohortRelationships) {
-        const userId = uploadedUsers.find(
+        const userId = existingUsers.find(
           (user) => user.email === item.email,
         )?.id;
-        const cohortId = uploadedCohorts.find(
+        const cohortId = existingCohorts.find(
           (cohort) => cohort.name === item.cohort,
         )?.id;
 
         if (userId && cohortId) {
+          console.log(userId, cohortId);
           await db
             .insert(cohortMemberships)
             .values({ userId, cohortId })
