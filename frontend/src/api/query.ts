@@ -2,7 +2,7 @@ import { API } from "./client";
 
 export const GET_USER_COHORTS = async (userId?: string) => {
   return (
-    await API.get("/api/cohorts/getUserCohorts", {
+    await API.get("/api/user/cohorts", {
       params: {
         userId,
       },
