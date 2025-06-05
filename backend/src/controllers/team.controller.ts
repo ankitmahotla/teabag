@@ -43,10 +43,37 @@ export const getTeamById = asyncHandler(async (req: Request, res: Response) => {
   }
 
   try {
-    const team = await db
-      .select()
+    const rows = await db
+      .select({
+        teamId: teams.id,
+        name: teams.name,
+        description: teams.description,
+        cohortId: teams.cohortId,
+        isPublished: teams.isPublished,
+        membershipId: teamMemberships.id,
+        userId: teamMemberships.userId,
+      })
       .from(teams)
+      .innerJoin(teamMemberships, eq(teams.id, teamMemberships.teamId))
       .where(eq(teams.id, id as string));
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Team not found" });
+    }
+
+    const { teamId, name, description, cohortId, isPublished } = rows[0]!;
+
+    const team = {
+      id: teamId,
+      name,
+      description,
+      cohortId,
+      isPublished,
+      members: rows.map((row) => ({
+        membershipId: row.membershipId,
+        userId: row.userId,
+      })),
+    };
 
     return res.status(200).json(team);
   } catch (e) {

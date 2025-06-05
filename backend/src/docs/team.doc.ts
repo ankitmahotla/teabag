@@ -65,7 +65,7 @@
  *   get:
  *     summary: Get team details by ID
  *     description: |
- *       Retrieves the details of a specific team using its ID.
+ *       Retrieves the details of a specific team by its ID, including team members.
  *       Requires user authentication via HTTP-only cookies.
  *     tags:
  *       - Teams
@@ -75,47 +75,77 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: Team ID
+ *           format: uuid
+ *         description: The ID of the team to retrieve.
  *     responses:
  *       200:
  *         description: Successfully retrieved team
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                     example: 089d1d63-29f2-4b57-9470-acf181b68499
- *                   name:
- *                     type: string
- *                     example: Hydration Error
- *                   description:
- *                     type: string
- *                     example: ""
- *                   cohortId:
- *                     type: string
- *                     example: 0023bbee-9b28-4a37-9fd1-40ebe1a720bb
- *                   leaderId:
- *                     type: string
- *                     example: e9f25759-e292-4e33-94d7-1a6cce4c1468
- *                   isPublished:
- *                     type: string
- *                     example: "false"
- *                   createdAt:
- *                     type: string
- *                     format: date-time
- *                     example: 2025-06-04T14:06:16.031Z
- *                   disbandedAt:
- *                     type: string
- *                     nullable: true
- *                     example: null
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   format: uuid
+ *                   example: 089d1d63-29f2-4b57-9470-acf181b68499
+ *                 name:
+ *                   type: string
+ *                   example: Hydration Error
+ *                 description:
+ *                   type: string
+ *                   nullable: true
+ *                   example: ""
+ *                 cohortId:
+ *                   type: string
+ *                   format: uuid
+ *                   example: 0023bbee-9b28-4a37-9fd1-40ebe1a720bb
+ *                 isPublished:
+ *                   type: boolean
+ *                   example: false
+ *                 members:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       membershipId:
+ *                         type: string
+ *                         format: uuid
+ *                         example: 756fd9e4-8772-49b5-8131-5348b3e29333
+ *                       userId:
+ *                         type: string
+ *                         format: uuid
+ *                         example: e9f25759-e292-4e33-94d7-1a6cce4c1468
  *       401:
  *         description: User is not authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: User not found
+ *       404:
+ *         description: Team not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Team not found
  *       500:
  *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Failed to retrieve team
  */
 
 /**
