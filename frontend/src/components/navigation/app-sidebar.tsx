@@ -1,4 +1,4 @@
-import { Inbox } from "lucide-react";
+import { Home, Inbox } from "lucide-react";
 
 import {
   Sidebar,
@@ -16,13 +16,13 @@ import { NavUser } from "./nav-user";
 import Link from "next/link";
 import { useSessionStore } from "@/store/session";
 
-// const items = [
-//   {
-//     title: "Homes",
-//     url: "#",
-//     icon: Home,
-//   },
-// ];
+const items = [
+  {
+    title: "Home",
+    url: "/",
+    icon: Home,
+  },
+];
 
 export function AppSidebar() {
   const { user } = useSessionStore();
@@ -37,7 +37,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Application</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {/* {items.map((item) => (
+              {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <Link href={item.url}>
@@ -46,7 +46,7 @@ export function AppSidebar() {
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              ))} */}
+              ))}
               {user?.role === "admin" && (
                 <SidebarMenuItem key="Admin Panel">
                   <SidebarMenuButton asChild>

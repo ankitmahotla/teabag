@@ -1,7 +1,6 @@
 "use client";
 import { CreateTeam } from "@/components/home/create-team";
 import { Teams } from "@/components/home/teams";
-import { SpaceSelect } from "@/components/space-select";
 import { Suspense } from "react";
 
 export default function HomePage() {
@@ -9,9 +8,6 @@ export default function HomePage() {
     <main className="px-4 py-8">
       <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">Home Page</h1>
-        <Suspense fallback={<div>Loading...</div>}>
-          <SpaceSelect />
-        </Suspense>
       </header>
 
       <section className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-12 mb-6 gap-4">

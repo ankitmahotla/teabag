@@ -17,10 +17,11 @@ import { redirect, usePathname } from "next/navigation";
 import { useSessionStore } from "@/store/session";
 import { Spinner } from "@/components/spinner";
 import { useRefreshTokensSync } from "@/sync/auth";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import _ from "lodash";
+import { SpaceSelect } from "@/components/space-select";
 
 export default function PrivateLayout({
   children,
@@ -48,7 +49,7 @@ export default function PrivateLayout({
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+        <header className="flex h-16 shrink-0 justify-between items-center pr-4 gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
@@ -77,6 +78,9 @@ export default function PrivateLayout({
               </BreadcrumbList>
             </Breadcrumb>
           </div>
+          <Suspense fallback={<div>Loading...</div>}>
+            <SpaceSelect />
+          </Suspense>
         </header>
         <Separator />
         <main className="p-4">{children}</main>
