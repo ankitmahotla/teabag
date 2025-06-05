@@ -204,11 +204,11 @@
 
 /**
  * @openapi
- * /api/teams/{teamId}/publish:
+ * /api/teams/{teamId}/toggle-publish:
  *   put:
- *     summary: Publish a team
+ *     summary: Toggle publish state of a team
  *     description: |
- *       Marks a team as published. Only the team leader can publish the team.
+ *       Toggles the published state of a team. Only the team leader can perform this action.
  *       Requires user authentication via HTTP-only cookies.
  *     tags:
  *       - Teams
@@ -216,13 +216,13 @@
  *       - in: path
  *         name: teamId
  *         required: true
- *         description: UUID of the team to publish
+ *         description: UUID of the team to toggle publish state
  *         schema:
  *           type: string
  *           format: uuid
  *     responses:
  *       200:
- *         description: Team published successfully
+ *         description: Team publish state updated successfully
  *         content:
  *           application/json:
  *             schema:
@@ -231,6 +231,9 @@
  *                 message:
  *                   type: string
  *                   example: Team published successfully
+ *                 isPublished:
+ *                   type: boolean
+ *                   example: true
  *       400:
  *         description: Missing or invalid team ID
  *         content:
@@ -252,7 +255,7 @@
  *                   type: string
  *                   example: Team not found
  *       500:
- *         description: Internal server error while publishing team
+ *         description: Internal server error while updating publish state
  *         content:
  *           application/json:
  *             schema:
@@ -260,5 +263,5 @@
  *               properties:
  *                 error:
  *                   type: string
- *                   example: Failed to publish team
+ *                   example: Failed to toggle publish state
  */

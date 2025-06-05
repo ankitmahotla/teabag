@@ -125,38 +125,46 @@ export const createTeam = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-export const publishTeam = asyncHandler(async (req: Request, res: Response) => {
-  const user = req.user;
-  const { teamId } = req.params;
+export const togglePublishTeam = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = req.user;
+    const { teamId } = req.params;
 
-  if (!teamId) {
-    return res.status(400).json({ error: "Missing team ID" });
-  }
-
-  try {
-    const team = await db
-      .select()
-      .from(teams)
-      .where(
-        and(
-          eq(teams.id, teamId),
-          eq(teams.leaderId, user.id),
-          isNull(teams.disbandedAt),
-        ),
-      );
-
-    if (!team) {
-      return res.status(404).json({ error: "Team not found" });
+    if (!teamId) {
+      return res.status(400).json({ error: "Missing team ID" });
     }
 
-    await db
-      .update(teams)
-      .set({ isPublished: true })
-      .where(eq(teams.id, teamId));
+    try {
+      const team = await db
+        .select()
+        .from(teams)
+        .where(
+          and(
+            eq(teams.id, teamId),
+            eq(teams.leaderId, user.id),
+            isNull(teams.disbandedAt),
+          ),
+        )
+        .then((rows) => rows[0]);
 
-    res.status(200).json({ message: "Team published successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to publish team" });
-  }
-});
+      if (!team) {
+        return res.status(404).json({ error: "Team not found" });
+      }
+
+      const newPublishState = !team.isPublished;
+
+      await db
+        .update(teams)
+        .set({ isPublished: newPublishState })
+        .where(eq(teams.id, teamId));
+
+      return res.status(200).json({
+        message: `Team ${newPublishState ? "published" : "unpublished"} successfully`,
+        isPublished: newPublishState,
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: "Failed to toggle publish state" });
+    }
+  },
+);

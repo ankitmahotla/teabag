@@ -1,5 +1,9 @@
-import { CREATE_TEAM } from "@/api/mutation";
-import { GET_COHORT_TEAMS, GET_TEAM_BY_ID } from "@/api/query";
+import { CREATE_TEAM, TOGGLE_PUBLISH_TEAM } from "@/api/mutation";
+import {
+  GET_COHORT_TEAMS,
+  GET_TEAM_BY_ID,
+  GET_USER_TEAM_BY_COHORT,
+} from "@/api/query";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { queryClient } from "./client";
@@ -28,6 +32,28 @@ export const useCreateTeamSync = () => {
     onSuccess: () => {
       toast.success("Team created successfully");
       queryClient.invalidateQueries({ queryKey: ["teams"] });
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+};
+
+export const useGetUserTeamByCohortSync = (cohortId: string) => {
+  const isEnabled = Boolean(cohortId);
+  return useQuery({
+    queryKey: ["userTeam", cohortId],
+    queryFn: () => GET_USER_TEAM_BY_COHORT(cohortId),
+    enabled: isEnabled,
+  });
+};
+
+export const useTogglePublishTeamSync = () => {
+  return useMutation({
+    mutationFn: TOGGLE_PUBLISH_TEAM,
+    onSuccess: () => {
+      toast.success("Team published successfully");
+      queryClient.invalidateQueries({ queryKey: ["userTeam"] });
     },
     onError: (error) => {
       console.error(error);

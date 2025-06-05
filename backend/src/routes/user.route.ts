@@ -10,8 +10,8 @@ const router = Router();
 
 router.use(authenticate);
 
-router.get("/:id", getUserById);
 router.get("/cohorts", getUserCohorts);
+router.get("/:id", getUserById);
 router.get("/team/:cohortId", getUserTeamByCohort);
 
 export default router;

@@ -63,7 +63,7 @@ export const getUserCohorts = asyncHandler(
       return res.status(200).json({ cohortsDetails: userCohorts });
     } catch (e) {
       console.error(e);
-      return res.status(500).json({ error: "Internal Server Error" });
+      return res.status(500).json({ error: "Error fetching user cohorts" });
     }
   },
 );
@@ -83,6 +83,7 @@ export const getUserTeamByCohort = asyncHandler(
           teamId: teams.id,
           name: teams.name,
           leaderId: teams.leaderId,
+          isPublished: teams.isPublished,
           createdAt: teams.createdAt,
         })
         .from(teamMemberships)

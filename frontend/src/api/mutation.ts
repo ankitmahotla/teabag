@@ -29,3 +29,7 @@ export const UPLOAD_CSV = async (formData: FormData) => {
 export const CREATE_TEAM = async (team: TEAM_CREATE) => {
   return (await API.post("/api/teams", team)).data;
 };
+
+export const TOGGLE_PUBLISH_TEAM = async (teamId: string) => {
+  return (await API.put(`/api/teams/${teamId}/toggle-publish`)).data;
+};

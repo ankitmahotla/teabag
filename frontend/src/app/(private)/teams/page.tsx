@@ -1,6 +1,6 @@
 "use client";
-import { CreateTeam } from "@/components/home/create-team";
-import { Teams } from "@/components/home/teams";
+import { CreateTeam } from "@/components/team/create-team";
+import { Teams } from "@/components/team/teams";
 import { Loader } from "lucide-react";
 import { Suspense } from "react";
 
