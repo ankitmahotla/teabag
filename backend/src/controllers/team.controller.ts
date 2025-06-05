@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { asyncHandler } from "../utils/async-handler";
 import { db } from "../db";
 import { teamMemberships, teams } from "../db/schema";
-import { and, eq, isNull, not } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 export const getAllTeams = asyncHandler(async (req: Request, res: Response) => {
   const user = req.user;

@@ -23,7 +23,7 @@ const items = [
     icon: Home,
   },
   {
-    title: "Teams",
+    title: "Public Teams",
     url: "/teams",
     icon: Group,
   },

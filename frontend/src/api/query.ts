@@ -19,3 +19,7 @@ export const GET_COHORT_TEAMS = async (cohortId: string) => {
     })
   ).data;
 };
+
+export const GET_TEAM_BY_ID = async (teamId: string) => {
+  return (await API.get(`/api/teams/${teamId}`)).data;
+};
