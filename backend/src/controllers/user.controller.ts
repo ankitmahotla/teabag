@@ -1,16 +1,47 @@
 import type { Request, Response } from "express";
 import { asyncHandler } from "../utils/async-handler";
 import { db } from "../db";
-import { cohortMemberships, cohorts } from "../db/schema";
-import { eq } from "drizzle-orm";
+import {
+  cohortMemberships,
+  cohorts,
+  teamMemberships,
+  teams,
+  users,
+} from "../db/schema";
+import { and, eq, isNull } from "drizzle-orm";
+
+export const getUserById = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ error: "Invalid user id" });
+  }
+
+  try {
+    const user = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        role: users.role,
+      })
+      .from(users)
+      .where(eq(users.id, id));
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    return res.status(200).json({ user });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 export const getUserCohorts = asyncHandler(
   async (req: Request, res: Response) => {
     const user = req.user;
-
-    if (!user) {
-      return res.status(401).json({ error: "User not found" });
-    }
 
     try {
       const userCohorts = await db
@@ -30,6 +61,47 @@ export const getUserCohorts = asyncHandler(
       }
 
       return res.status(200).json({ cohortsDetails: userCohorts });
+    } catch (e) {
+      console.error(e);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+  },
+);
+
+export const getUserTeamByCohort = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = req.user;
+    const { cohortId } = req.params;
+
+    if (!cohortId) {
+      return res.status(400).json({ error: "Invalid cohort id" });
+    }
+
+    try {
+      const userTeam = await db
+        .select({
+          teamId: teams.id,
+          name: teams.name,
+          leaderId: teams.leaderId,
+          createdAt: teams.createdAt,
+        })
+        .from(teamMemberships)
+        .innerJoin(teams, eq(teamMemberships.teamId, teams.id))
+        .where(
+          and(
+            eq(teamMemberships.userId, user.id),
+            eq(teams.cohortId, cohortId),
+            isNull(teams.disbandedAt),
+          ),
+        );
+
+      if (!userTeam || userTeam.length === 0) {
+        return res
+          .status(404)
+          .json({ error: "User is not a part of any teams in the cohort" });
+      }
+
+      return res.status(200).json({ teamDetails: userTeam });
     } catch (e) {
       console.error(e);
       return res.status(500).json({ error: "Internal Server Error" });
