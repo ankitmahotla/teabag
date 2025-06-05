@@ -6,8 +6,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useGetTeamByIdSync } from "@/sync/teams";
+import { Loader } from "lucide-react";
 
-export const TeamDetail = ({ teamId, open, setOpen }) => {
+export const TeamDetail = ({
+  teamId,
+  open,
+  setOpen,
+}: {
+  teamId: string;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}) => {
   const { data: team } = useGetTeamByIdSync(teamId);
 
   return (
@@ -44,11 +53,13 @@ export const TeamDetail = ({ teamId, open, setOpen }) => {
               <h3 className="text-lg font-medium">Members</h3>
               {team.members.length > 0 ? (
                 <ul className="pl-4 list-disc text-sm space-y-1">
-                  {team.members.map((member) => (
-                    <li key={member.membershipId} className="break-all">
-                      {member.userId}
-                    </li>
-                  ))}
+                  {team.members.map(
+                    (member: { membershipId: string; userId: string }) => (
+                      <li key={member.membershipId} className="break-all">
+                        {member.userId}
+                      </li>
+                    ),
+                  )}
                 </ul>
               ) : (
                 <p className="text-sm text-muted-foreground">
@@ -58,9 +69,7 @@ export const TeamDetail = ({ teamId, open, setOpen }) => {
             </section>
           </div>
         ) : (
-          <div className="text-sm text-muted-foreground">
-            Loading team details...
-          </div>
+          <Loader className="h-6 w-6 animate-spin" />
         )}
       </DialogContent>
     </Dialog>

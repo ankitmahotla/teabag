@@ -1,6 +1,7 @@
 "use client";
 import { CreateTeam } from "@/components/home/create-team";
 import { Teams } from "@/components/home/teams";
+import { Loader } from "lucide-react";
 import { Suspense } from "react";
 
 export default function Page() {
@@ -11,7 +12,7 @@ export default function Page() {
         <CreateTeam />
       </section>
 
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<Loader className="h-6 w-6 animate-spin" />}>
         <Teams />
       </Suspense>
     </>
