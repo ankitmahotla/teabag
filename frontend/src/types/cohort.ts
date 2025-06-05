@@ -1,5 +1,5 @@
 export type Cohort = {
-  id: string;
+  cohortId: string;
   name: string;
   createdAt: string;
 };

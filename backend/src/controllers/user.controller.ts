@@ -14,8 +14,13 @@ export const getUserCohorts = asyncHandler(
 
     try {
       const userCohorts = await db
-        .select()
+        .select({
+          cohortId: cohorts.id,
+          name: cohorts.name,
+          createdAt: cohorts.createdAt,
+        })
         .from(cohortMemberships)
+        .innerJoin(cohorts, eq(cohortMemberships.cohortId, cohorts.id))
         .where(eq(cohortMemberships.userId, user.id));
 
       if (!userCohorts || userCohorts.length === 0) {
@@ -24,17 +29,7 @@ export const getUserCohorts = asyncHandler(
           .json({ error: "User is not a part of any cohorts" });
       }
 
-      let cohortsDetails = [];
-
-      for (const cohortMembership of userCohorts) {
-        const [cohortDetail] = await db
-          .select()
-          .from(cohorts)
-          .where(eq(cohorts.id, cohortMembership.cohortId));
-        cohortsDetails.push(cohortDetail);
-      }
-
-      return res.status(200).json({ cohortsDetails });
+      return res.status(200).json({ cohortsDetails: userCohorts });
     } catch (e) {
       console.error(e);
       return res.status(500).json({ error: "Internal Server Error" });

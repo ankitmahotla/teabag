@@ -1,5 +1,6 @@
 import axios from "axios";
 import { API } from "./client";
+import { TEAM_CREATE } from "@/types/team";
 
 export const SIGN_IN = async ({ code }: { code: string }) => {
   return (
@@ -23,4 +24,8 @@ export const UPLOAD_CSV = async (formData: FormData) => {
       withCredentials: true,
     })
   ).data;
+};
+
+export const CREATE_TEAM = async (team: TEAM_CREATE) => {
+  return (await API.post("/api/teams", team)).data;
 };
