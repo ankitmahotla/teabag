@@ -78,7 +78,7 @@ export const getUserTeamByCohort = asyncHandler(
     }
 
     try {
-      const userTeam = await db
+      const teamRows = await db
         .select({
           teamId: teams.id,
           name: teams.name,
@@ -96,13 +96,30 @@ export const getUserTeamByCohort = asyncHandler(
           ),
         );
 
-      if (!userTeam || userTeam.length === 0) {
+      if (!teamRows || teamRows.length === 0) {
         return res
           .status(404)
           .json({ error: "User is not a part of any teams in the cohort" });
       }
 
-      return res.status(200).json({ teamDetails: userTeam });
+      const team = teamRows[0]!;
+
+      const members = await db
+        .select({
+          membershipId: teamMemberships.id,
+          userId: teamMemberships.userId,
+        })
+        .from(teamMemberships)
+        .where(eq(teamMemberships.teamId, team.teamId));
+
+      return res.status(200).json({
+        teamDetails: [
+          {
+            ...team,
+            members,
+          },
+        ],
+      });
     } catch (e) {
       console.error(e);
       return res.status(500).json({ error: "Internal Server Error" });
