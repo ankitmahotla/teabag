@@ -67,7 +67,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <h3 className="text-lg font-medium">Teagbag</h3>
+        <h3 className="text-lg font-medium">Teabag</h3>
       </SidebarFooter>
     </Sidebar>
   );
