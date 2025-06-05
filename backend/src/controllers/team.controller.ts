@@ -37,6 +37,7 @@ export const getTeamById = asyncHandler(async (req: Request, res: Response) => {
         teamId: teams.id,
         name: teams.name,
         description: teams.description,
+        leaderId: teams.leaderId,
         cohortId: teams.cohortId,
         isPublished: teams.isPublished,
         membershipId: teamMemberships.id,
@@ -50,12 +51,14 @@ export const getTeamById = asyncHandler(async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Team not found" });
     }
 
-    const { teamId, name, description, cohortId, isPublished } = rows[0]!;
+    const { teamId, name, description, cohortId, isPublished, leaderId } =
+      rows[0]!;
 
     const team = {
       id: teamId,
       name,
       description,
+      leaderId,
       cohortId,
       isPublished,
       members: rows.map((row) => ({

@@ -5,8 +5,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useSessionStore } from "@/store/session";
 import { useGetTeamByIdSync } from "@/sync/teams";
-import { Loader } from "lucide-react";
+import { useGetUserByIdSync } from "@/sync/user";
+import { Crown, Loader } from "lucide-react";
 
 export const TeamDetail = ({
   teamId,
@@ -55,9 +57,11 @@ export const TeamDetail = ({
                 <ul className="pl-4 list-disc text-sm space-y-1">
                   {team.members.map(
                     (member: { membershipId: string; userId: string }) => (
-                      <li key={member.membershipId} className="break-all">
-                        {member.userId}
-                      </li>
+                      <Member
+                        key={member.membershipId}
+                        userId={member.userId}
+                        isLeader={member.userId === team.leaderId}
+                      />
                     ),
                   )}
                 </ul>
@@ -73,5 +77,25 @@ export const TeamDetail = ({
         )}
       </DialogContent>
     </Dialog>
+  );
+};
+
+const Member = ({
+  userId,
+  isLeader,
+}: {
+  userId: string;
+  isLeader: boolean;
+}) => {
+  const { user } = useSessionStore();
+  const { data } = useGetUserByIdSync(userId);
+
+  return (
+    <li key={userId} className="break-all">
+      <p className="flex items-center gap-2 ">
+        {user?.id === userId ? "You" : data?.user[0].name}{" "}
+        {isLeader ? <Crown size={12} color="white" /> : ""}
+      </p>
+    </li>
   );
 };
