@@ -2,7 +2,7 @@
  * @openapi
  * /api/teams:
  *   get:
- *     summary: Get all teams in a specific cohort
+ *     summary: Get all published teams in a specific cohort
  *     description: |
  *       Retrieves all teams that belong to the specified cohort.
  *       Requires user authentication via HTTP-only cookies.
@@ -41,8 +41,8 @@
  *                     type: string
  *                     example: e9f25759-e292-4e33-94d7-1a6cce4c1468
  *                   isPublished:
- *                     type: string
- *                     example: "false"
+ *                     type: boolean
+ *                     example: true
  *                   createdAt:
  *                     type: string
  *                     format: date-time

@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { asyncHandler } from "../utils/async-handler";
 import { db } from "../db";
 import { teamMemberships, teams } from "../db/schema";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, not } from "drizzle-orm";
 
 export const getAllTeams = asyncHandler(async (req: Request, res: Response) => {
   const user = req.user;
@@ -20,7 +20,12 @@ export const getAllTeams = asyncHandler(async (req: Request, res: Response) => {
     const teamsInCohort = await db
       .select()
       .from(teams)
-      .where(eq(teams.cohortId, cohortId as string));
+      .where(
+        and(
+          eq(teams.cohortId, cohortId as string),
+          eq(teams.isPublished, false),
+        ),
+      );
 
     return res.status(200).json(teamsInCohort);
   } catch (e) {

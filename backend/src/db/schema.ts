@@ -6,6 +6,7 @@ import {
   pgEnum,
   text,
   unique,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 export const userRoleEnum = pgEnum("user_role", ["admin", "user"]);
@@ -57,7 +58,7 @@ export const teams = pgTable("teams", {
   leaderId: uuid("leader_id")
     .notNull()
     .references(() => users.id, { onDelete: "restrict" }),
-  isPublished: text("is_published").default("false"),
+  isPublished: boolean("is_published").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   disbandedAt: timestamp("disbanded_at"),
 });
