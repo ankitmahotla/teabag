@@ -4,6 +4,7 @@ import {
   createTeam,
   getAllTeams,
   getTeamById,
+  publishTeam,
 } from "../controllers/team.controller";
 
 const router = Router();
@@ -14,5 +15,6 @@ router.get("/", getAllTeams);
 router.get("/:id", getTeamById);
 
 router.post("/", createTeam);
+router.put("/:teamId/publish", publishTeam);
 
 export default router;

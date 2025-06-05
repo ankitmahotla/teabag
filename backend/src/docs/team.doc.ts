@@ -201,3 +201,64 @@
  *       500:
  *         description: Failed to create team
  */
+
+/**
+ * @openapi
+ * /api/teams/{teamId}/publish:
+ *   put:
+ *     summary: Publish a team
+ *     description: |
+ *       Marks a team as published. Only the team leader can publish the team.
+ *       Requires user authentication via HTTP-only cookies.
+ *     tags:
+ *       - Teams
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         description: UUID of the team to publish
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Team published successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Team published successfully
+ *       400:
+ *         description: Missing or invalid team ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Missing team ID
+ *       404:
+ *         description: Team not found or not owned by the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Team not found
+ *       500:
+ *         description: Internal server error while publishing team
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Failed to publish team
+ */
