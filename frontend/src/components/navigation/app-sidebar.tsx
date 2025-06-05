@@ -1,4 +1,4 @@
-import { Home, Inbox } from "lucide-react";
+import { Group, Home, Inbox } from "lucide-react";
 
 import {
   Sidebar,
@@ -21,6 +21,11 @@ const items = [
     title: "Home",
     url: "/",
     icon: Home,
+  },
+  {
+    title: "Teams",
+    url: "/teams",
+    icon: Group,
   },
 ];
 
