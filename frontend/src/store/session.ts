@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import useSpaceStore from "./space";
 
 enum Role {
   ADMIN = "admin",
@@ -56,6 +57,7 @@ export const useSessionStore = create<SessionState & SessionActions>()(
 
       resetSession: async () => {
         useSessionStore.persist.clearStorage();
+        useSpaceStore.persist.clearStorage();
         set({ ...initialState });
         await useSessionStore.persist.rehydrate();
       },
