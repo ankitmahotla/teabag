@@ -120,7 +120,7 @@ export const TeamDetail = ({
                     disabled={!requestStatus.canWithdraw}
                     onClick={handleWithdrawTeamJoiningRequest}
                   >
-                    Withdraw
+                    {requestStatus.canWithdraw ? "Withdraw" : "Wait 24h"}
                   </Button>
                 </div>
               ) : (

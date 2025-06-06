@@ -127,3 +127,42 @@ export const getUserTeamByCohort = asyncHandler(
     }
   },
 );
+
+export const getAllUserTeamJoiningRequestsByCohort = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = req.user;
+    const cohortId = req.params.cohortId;
+
+    if (!cohortId) {
+      return res.status(400).json({ error: "Cohort ID is required" });
+    }
+
+    try {
+      const requests = await db
+        .select({
+          requestId: teamJoinRequests.id,
+          teamId: teamJoinRequests.teamId,
+          teamName: teams.name,
+          status: teamJoinRequests.status,
+          createdAt: teamJoinRequests.createdAt,
+        })
+        .from(teamJoinRequests)
+        .innerJoin(teams, eq(teams.id, teamJoinRequests.teamId))
+        .where(
+          and(
+            eq(teamJoinRequests.userId, user.id),
+            eq(teams.cohortId, cohortId),
+          ),
+        );
+
+      return res.status(200).json({
+        requests,
+      });
+    } catch (e) {
+      console.error(e);
+      return res
+        .status(500)
+        .json({ error: "Error fetching team joining requests for user" });
+    }
+  },
+);

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authenticate } from "../middlewares/auth.middleware";
 import {
+  getAllUserTeamJoiningRequestsByCohort,
   getUserById,
   getUserCohorts,
   getUserTeamByCohort,
@@ -13,4 +14,6 @@ router.use(authenticate);
 router.get("/cohorts", getUserCohorts);
 router.get("/:id", getUserById);
 router.get("/team/:cohortId", getUserTeamByCohort);
+router.get("/requests/:cohortId", getAllUserTeamJoiningRequestsByCohort);
+
 export default router;

@@ -10,8 +10,7 @@ import { format } from "date-fns";
 import { useSessionStore } from "@/store/session";
 import { TeamMembers } from "./team-members";
 import { NoticeBoard } from "./notice-board";
-import { useRouter } from "next/navigation";
-import { CreateTeam } from "../team/create-team";
+import { TeamNotFound } from "./team-notfound";
 
 export const UserTeam = () => {
   const { user } = useSessionStore();
@@ -79,28 +78,5 @@ export const UserTeam = () => {
       <TeamMembers members={team.members} />
       <NoticeBoard />
     </>
-  );
-};
-
-const TeamNotFound = () => {
-  const router = useRouter();
-  return (
-    <div className="flex flex-col items-center justify-center text-center space-y-4 text-muted-foreground">
-      <h2 className="text-lg font-medium">
-        You&apos;re not part of a team yet.
-      </h2>
-      <p className="text-sm">
-        Join an existing team or create your own to get started.
-      </p>
-      <div className="flex gap-4">
-        <Button variant="outline" onClick={() => router.push("/teams")}>
-          Join a Team
-        </Button>
-        {/* <Button onClick={() => console.log("Create flow")}>
-          Create a Team
-        </Button> */}
-        <CreateTeam />
-      </div>
-    </div>
   );
 };

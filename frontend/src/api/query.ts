@@ -35,3 +35,15 @@ export const GET_USER_BY_ID = async (userId: string) => {
 export const GET_TEAM_REQUEST_STATUS = async (teamId: string) => {
   return (await API.get(`/api/teams/${teamId}/request-status`)).data;
 };
+
+export const GET_USER_TEAM_JOINING_REQUESTS_BY_COHORT = async (
+  cohortId: string,
+) => {
+  return (
+    await API.get(`/api/user/requests/${cohortId}`, {
+      params: {
+        cohortId,
+      },
+    })
+  ).data;
+};
