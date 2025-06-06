@@ -316,13 +316,13 @@ export const withdrawTeamJoiningRequest = asyncHandler(
         });
       }
 
-      const createdAtTime = new Date(request.createdAt).getTime();
+      const createdAtTime = request.createdAt.getTime();
       const now = Date.now();
       const timeElapsed = now - createdAtTime;
 
-      if (timeElapsed > 1000 * 60 * 60 * 24) {
+      if (timeElapsed < 1000 * 60 * 60 * 24) {
         return res.status(400).json({
-          error: "You can only withdraw your request within 24 hours",
+          error: "You can only withdraw your request after 24 hours",
         });
       }
 
@@ -368,9 +368,21 @@ export const getTeamRequestStatus = asyncHandler(
         );
 
       const hasRequested = request.length > 0;
+      let canWithdraw = false;
+
+      if (hasRequested) {
+        const createdAtTime = request[0]?.createdAt.getTime();
+        const now = Date.now();
+        const timeElapsed = now - (createdAtTime ?? 0);
+
+        if (timeElapsed >= 1000 * 60 * 60 * 24) {
+          canWithdraw = true;
+        }
+      }
 
       return res.status(200).json({
         hasRequested,
+        canWithdraw,
         request: hasRequested ? request[0] : null,
       });
     } catch (e) {

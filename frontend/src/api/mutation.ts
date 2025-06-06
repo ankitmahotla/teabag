@@ -47,3 +47,7 @@ export const REQUEST_TEAM_JOIN = async ({
     await API.post(`/api/teams/${teamId}/request-join`, { note, cohortId })
   ).data;
 };
+
+export const WITHDRAW_TEAM_JOIN_REQUEST = async (teamId: string) => {
+  return (await API.delete(`/api/teams/${teamId}/request-join`)).data;
+};

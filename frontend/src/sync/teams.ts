@@ -2,6 +2,7 @@ import {
   CREATE_TEAM,
   REQUEST_TEAM_JOIN,
   TOGGLE_PUBLISH_TEAM,
+  WITHDRAW_TEAM_JOIN_REQUEST,
 } from "@/api/mutation";
 import {
   GET_COHORT_TEAMS,
@@ -84,5 +85,17 @@ export const useGetTeamRequestStatusSync = (requestId: string) => {
     queryKey: ["requestStatus", requestId],
     queryFn: () => GET_TEAM_REQUEST_STATUS(requestId),
     enabled: isEnabled,
+  });
+};
+
+export const useWithdrawTeamJoiningRequestSync = () => {
+  return useMutation({
+    mutationFn: WITHDRAW_TEAM_JOIN_REQUEST,
+    onSuccess: () => {
+      toast.success("Request withdrawn successfully");
+    },
+    onError: (error) => {
+      console.error(error);
+    },
   });
 };

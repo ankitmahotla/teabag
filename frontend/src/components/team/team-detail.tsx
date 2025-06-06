@@ -11,12 +11,12 @@ import {
   useGetTeamByIdSync,
   useGetTeamRequestStatusSync,
   useRequestToJoinTeamSync,
+  useWithdrawTeamJoiningRequestSync,
 } from "@/sync/teams";
 import { useGetUserByIdSync } from "@/sync/user";
 import { Crown, Loader } from "lucide-react";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
-import _ from "lodash";
 
 export const TeamDetail = ({
   teamId,
@@ -33,7 +33,9 @@ export const TeamDetail = ({
 }) => {
   const { data: team } = useGetTeamByIdSync(teamId);
   const { data: requestStatus } = useGetTeamRequestStatusSync(teamId);
-  const { mutate } = useRequestToJoinTeamSync();
+  const { mutate: requestToJoinTeam } = useRequestToJoinTeamSync();
+  const { mutate: withdrawTeamJoiningRequest } =
+    useWithdrawTeamJoiningRequestSync();
 
   const [showNoteField, setShowNoteField] = useState(false);
   const [note, setNote] = useState("");
@@ -47,7 +49,14 @@ export const TeamDetail = ({
   };
 
   const handleJoinTeam = (note: string) => {
-    mutate({ teamId, note, cohortId });
+    requestToJoinTeam({ teamId, note, cohortId });
+    setOpen(false);
+    setShowNoteField(false);
+    setNote("");
+  };
+
+  const handleWithdrawTeamJoiningRequest = () => {
+    withdrawTeamJoiningRequest(teamId);
     setOpen(false);
     setShowNoteField(false);
     setNote("");
@@ -104,12 +113,23 @@ export const TeamDetail = ({
               )}
             </section>
 
-            {requestStatus.request.status ? (
-              <div className="flex justify-end">
-                <Button disabled={true}>
-                  {_.capitalize(requestStatus.request.status)}
-                </Button>
-              </div>
+            {requestStatus?.request?.status ? (
+              requestStatus.request.status === "pending" ? (
+                <div className="flex justify-end">
+                  <Button
+                    disabled={!requestStatus.canWithdraw}
+                    onClick={handleWithdrawTeamJoiningRequest}
+                  >
+                    Withdraw
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex justify-end">
+                  <Button variant="destructive" disabled={true}>
+                    Rejected
+                  </Button>
+                </div>
+              )
             ) : (
               isJoinable && (
                 <section className="space-y-2">

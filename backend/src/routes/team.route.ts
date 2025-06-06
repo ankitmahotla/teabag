@@ -7,6 +7,7 @@ import {
   getTeamRequestStatus,
   requestToJoinTeam,
   togglePublishTeam,
+  withdrawTeamJoiningRequest,
 } from "../controllers/team.controller";
 
 const router = Router();
@@ -17,6 +18,7 @@ router.get("/", getAllTeams);
 
 router.get("/:teamId/request-status", getTeamRequestStatus);
 router.post("/:teamId/request-join", requestToJoinTeam);
+router.delete("/:teamId/request-join", withdrawTeamJoiningRequest);
 router.put("/:teamId/toggle-publish", togglePublishTeam);
 
 router.get("/:id", getTeamById);
