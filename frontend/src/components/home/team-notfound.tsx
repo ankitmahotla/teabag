@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { CreateTeam } from "../team/create-team";
 import { useGetUserTeamJoiningRequestsByCohortSync } from "@/sync/user";
 import useSpaceStore from "@/store/space";
-import { formatDistanceToNowStrict, isAfter, subHours } from "date-fns";
+import { formatDistanceToNowStrict } from "date-fns";
 import { useState } from "react";
 import { TeamDetail } from "../team/team-detail";
 
@@ -14,10 +14,6 @@ export const TeamNotFound = () => {
 
   const router = useRouter();
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
-
-  const handleWithdraw = (requestId: string) => {
-    console.log("Withdraw request:", requestId);
-  };
 
   return (
     <div className="flex flex-col items-center justify-center w-full px-4 py-10 space-y-10">
@@ -44,10 +40,7 @@ export const TeamNotFound = () => {
         <div className="border border-muted rounded-lg max-h-64 overflow-y-auto bg-background p-2 space-y-2">
           {requests.length > 0 ? (
             requests.map((req) => {
-              const isPending = req.status === "pending";
               const createdAt = new Date(req.createdAt);
-              const canWithdraw =
-                isPending && isAfter(subHours(new Date(), 24), createdAt);
 
               return (
                 <div
@@ -67,20 +60,6 @@ export const TeamNotFound = () => {
                       </p>
                     </div>
                   </div>
-
-                  {isPending && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={!canWithdraw}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleWithdraw(req.requestId);
-                      }}
-                    >
-                      {canWithdraw ? "Withdraw" : "Wait 24h"}
-                    </Button>
-                  )}
                 </div>
               );
             })
