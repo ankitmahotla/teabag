@@ -13,5 +13,4 @@ router.use(authenticate);
 router.get("/cohorts", getUserCohorts);
 router.get("/:id", getUserById);
 router.get("/team/:cohortId", getUserTeamByCohort);
-
 export default router;

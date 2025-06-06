@@ -1,6 +1,5 @@
 "use client";
 
-import { NoticeBoard } from "@/components/home/notice-board";
 import { UserTeam } from "@/components/home/user-team";
 import { Loader } from "lucide-react";
 import { Suspense } from "react";
@@ -11,7 +10,6 @@ export default function HomePage() {
       <Suspense fallback={<Loader className="h-6 w-6 animate-spin" />}>
         <UserTeam />
       </Suspense>
-      <NoticeBoard />
     </div>
   );
 }

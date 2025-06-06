@@ -1,7 +1,12 @@
-import { CREATE_TEAM, TOGGLE_PUBLISH_TEAM } from "@/api/mutation";
+import {
+  CREATE_TEAM,
+  REQUEST_TEAM_JOIN,
+  TOGGLE_PUBLISH_TEAM,
+} from "@/api/mutation";
 import {
   GET_COHORT_TEAMS,
   GET_TEAM_BY_ID,
+  GET_TEAM_REQUEST_STATUS,
   GET_USER_TEAM_BY_COHORT,
 } from "@/api/query";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -31,7 +36,7 @@ export const useCreateTeamSync = () => {
     mutationFn: CREATE_TEAM,
     onSuccess: () => {
       toast.success("Team created successfully");
-      queryClient.invalidateQueries({ queryKey: ["teams"] });
+      queryClient.invalidateQueries({ queryKey: ["teams", "team"] });
     },
     onError: (error) => {
       console.error(error);
@@ -58,5 +63,26 @@ export const useTogglePublishTeamSync = () => {
     onError: (error) => {
       console.error(error);
     },
+  });
+};
+
+export const useRequestToJoinTeamSync = () => {
+  return useMutation({
+    mutationFn: REQUEST_TEAM_JOIN,
+    onSuccess: () => {
+      toast.success("Request sent successfully");
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+};
+
+export const useGetTeamRequestStatusSync = (requestId: string) => {
+  const isEnabled = Boolean(requestId);
+  return useQuery({
+    queryKey: ["requestStatus", requestId],
+    queryFn: () => GET_TEAM_REQUEST_STATUS(requestId),
+    enabled: isEnabled,
   });
 };

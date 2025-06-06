@@ -31,7 +31,7 @@ export const users = pgTable("users", {
 export const cohorts = pgTable("cohorts", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").unique().notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const cohortMemberships = pgTable(
@@ -44,6 +44,8 @@ export const cohortMemberships = pgTable(
     cohortId: uuid("cohort_id")
       .notNull()
       .references(() => cohorts.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [unique().on(t.userId, t.cohortId)],
 );
@@ -59,7 +61,7 @@ export const teams = pgTable("teams", {
     .notNull()
     .references(() => users.id, { onDelete: "restrict" }),
   isPublished: boolean("is_published").default(false).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
   disbandedAt: timestamp("disbanded_at"),
 });
 
@@ -73,7 +75,7 @@ export const teamMemberships = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    joinedAt: timestamp("joined_at").defaultNow(),
+    joinedAt: timestamp("joined_at").defaultNow().notNull(),
     leftAt: timestamp("left_at"),
   },
   (t) => [unique().on(t.teamId, t.userId)],
@@ -90,8 +92,7 @@ export const teamJoinRequests = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     note: text("note"),
-    profileAttachmentUrl: text("profile_attachment_url"),
-    createdAt: timestamp("created_at").defaultNow(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
     withdrawnAt: timestamp("withdrawn_at"),
     status: teamJoinRequestEnum("status").default("pending"),
   },
@@ -110,7 +111,7 @@ export const teamKickHistory = pgTable("team_kick_history", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   reason: text("reason"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const teamNoticeBoard = pgTable("team_notice_board", {
@@ -122,7 +123,7 @@ export const teamNoticeBoard = pgTable("team_notice_board", {
   postedBy: uuid("posted_by")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const teamNotes = pgTable("team_notes", {
@@ -133,6 +134,6 @@ export const teamNotes = pgTable("team_notes", {
   teamId: uuid("team_id")
     .notNull()
     .references(() => teams.id, { onDelete: "cascade" }),
-  note: text("note"),
-  createdAt: timestamp("created_at").defaultNow(),
+  note: text("note").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });

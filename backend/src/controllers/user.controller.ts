@@ -4,6 +4,7 @@ import { db } from "../db";
 import {
   cohortMemberships,
   cohorts,
+  teamJoinRequests,
   teamMemberships,
   teams,
   users,
@@ -122,7 +123,7 @@ export const getUserTeamByCohort = asyncHandler(
       });
     } catch (e) {
       console.error(e);
-      return res.status(500).json({ error: "Internal Server Error" });
+      return res.status(500).json({ error: "Error fetching team details" });
     }
   },
 );

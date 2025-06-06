@@ -31,3 +31,7 @@ export const GET_TEAM_BY_ID = async (teamId: string) => {
 export const GET_USER_BY_ID = async (userId: string) => {
   return (await API.get(`/api/user/${userId}`)).data;
 };
+
+export const GET_TEAM_REQUEST_STATUS = async (teamId: string) => {
+  return (await API.get(`/api/teams/${teamId}/request-status`)).data;
+};

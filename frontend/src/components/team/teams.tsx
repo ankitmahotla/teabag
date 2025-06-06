@@ -1,5 +1,8 @@
 import useSpaceStore from "@/store/space";
-import { useGetCohortTeamsSync } from "@/sync/teams";
+import {
+  useGetCohortTeamsSync,
+  useGetUserTeamByCohortSync,
+} from "@/sync/teams";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TEAM } from "@/types/team";
 import { TeamDetail } from "./team-detail";
@@ -8,6 +11,7 @@ import { useState } from "react";
 export const Teams = () => {
   const { spaceId } = useSpaceStore();
   const { data } = useGetCohortTeamsSync(spaceId ?? "");
+  const { data: userTeam } = useGetUserTeamByCohortSync(spaceId ?? "");
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
 
   return (
@@ -40,7 +44,9 @@ export const Teams = () => {
       {selectedTeamId && (
         <TeamDetail
           teamId={selectedTeamId}
+          cohortId={spaceId!}
           open={!!selectedTeamId}
+          isJoinable={!userTeam?.teamDetails?.length}
           setOpen={(open: boolean) => {
             if (!open) setSelectedTeamId(null);
           }}

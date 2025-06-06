@@ -33,3 +33,17 @@ export const CREATE_TEAM = async (team: TEAM_CREATE) => {
 export const TOGGLE_PUBLISH_TEAM = async (teamId: string) => {
   return (await API.put(`/api/teams/${teamId}/toggle-publish`)).data;
 };
+
+export const REQUEST_TEAM_JOIN = async ({
+  teamId,
+  note,
+  cohortId,
+}: {
+  teamId: string;
+  note: string;
+  cohortId: string;
+}) => {
+  return (
+    await API.post(`/api/teams/${teamId}/request-join`, { note, cohortId })
+  ).data;
+};

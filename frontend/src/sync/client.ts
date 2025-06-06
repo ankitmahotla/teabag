@@ -8,13 +8,7 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
     },
   },
-  queryCache: new QueryCache({
-    onError: (error) => {
-      toast("Error", {
-        description: getErrorMessage(error),
-      });
-    },
-  }),
+  queryCache: new QueryCache(),
   mutationCache: new MutationCache({
     onError: (error) => {
       toast("Error", {

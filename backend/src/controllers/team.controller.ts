@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { asyncHandler } from "../utils/async-handler";
 import { db } from "../db";
-import { teamMemberships, teams } from "../db/schema";
+import { teamJoinRequests, teamMemberships, teams } from "../db/schema";
 import { and, eq, isNull } from "drizzle-orm";
 
 export const getAllTeams = asyncHandler(async (req: Request, res: Response) => {
@@ -168,6 +168,214 @@ export const togglePublishTeam = asyncHandler(
     } catch (error) {
       console.error(error);
       return res.status(500).json({ error: "Failed to toggle publish state" });
+    }
+  },
+);
+
+export const requestToJoinTeam = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = req.user;
+    const { teamId } = req.params;
+    const { cohortId, note } = req.body;
+
+    if (!teamId) {
+      return res.status(400).json({ error: "Invalid team id" });
+    }
+
+    if (!cohortId) {
+      return res.status(400).json({ error: "Invalid cohort id" });
+    }
+
+    try {
+      const existingMembership = await db
+        .select()
+        .from(teamMemberships)
+        .where(
+          and(
+            eq(teamMemberships.teamId, teamId),
+            eq(teamMemberships.userId, user.id),
+          ),
+        );
+
+      if (existingMembership.length > 0) {
+        return res
+          .status(400)
+          .json({ error: "User is already a member of the team" });
+      }
+
+      const leaderOfTeamInCohort = await db
+        .select()
+        .from(teams)
+        .where(
+          and(
+            eq(teams.cohortId, cohortId),
+            eq(teams.leaderId, user.id),
+            isNull(teams.disbandedAt),
+          ),
+        );
+
+      if (leaderOfTeamInCohort.length > 0) {
+        return res
+          .status(400)
+          .json({ error: "User is already a leader of a team in this cohort" });
+      }
+
+      const team = await db
+        .select()
+        .from(teams)
+        .where(and(eq(teams.id, teamId), eq(teams.cohortId, cohortId)))
+        .then((rows) => rows[0]);
+
+      if (!team) {
+        return res
+          .status(400)
+          .json({ error: "Team does not belong to the provided cohort" });
+      }
+
+      const activeMembers = await db
+        .select()
+        .from(teamMemberships)
+        .where(
+          and(
+            eq(teamMemberships.teamId, teamId),
+            isNull(teamMemberships.leftAt),
+          ),
+        );
+
+      if (activeMembers.length >= 4) {
+        return res.status(400).json({
+          error: "Team already has the maximum number of members (4)",
+        });
+      }
+
+      const existingRequest = await db
+        .select()
+        .from(teamJoinRequests)
+        .where(
+          and(
+            eq(teamJoinRequests.teamId, teamId),
+            eq(teamJoinRequests.userId, user.id),
+          ),
+        );
+
+      if (existingRequest.length > 0) {
+        return res.status(400).json({
+          error: "You have already requested to join this team",
+        });
+      }
+
+      await db
+        .insert(teamJoinRequests)
+        .values({ userId: user.id, teamId, note });
+
+      return res.status(200).json({ message: "Added team join request" });
+    } catch (e) {
+      console.error(e);
+      return res.status(500).json({ error: "Error processing join request" });
+    }
+  },
+);
+
+export const withdrawTeamJoiningRequest = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = req.user;
+    const { teamId } = req.params;
+
+    if (!teamId) {
+      return res.status(400).json({ error: "Invalid team id" });
+    }
+
+    try {
+      const existingRequest = await db
+        .select()
+        .from(teamJoinRequests)
+        .where(
+          and(
+            eq(teamJoinRequests.teamId, teamId),
+            eq(teamJoinRequests.userId, user.id),
+          ),
+        );
+
+      if (existingRequest.length === 0) {
+        return res.status(400).json({
+          error: "You have not requested to join this team",
+        });
+      }
+
+      const request = existingRequest[0];
+
+      if (!request) {
+        return res.status(400).json({
+          error: "Invalid request",
+        });
+      }
+
+      if (request.status === "rejected") {
+        return res.status(400).json({
+          error: "Cannot withdraw a rejected request",
+        });
+      }
+
+      const createdAtTime = new Date(request.createdAt).getTime();
+      const now = Date.now();
+      const timeElapsed = now - createdAtTime;
+
+      if (timeElapsed > 1000 * 60 * 60 * 24) {
+        return res.status(400).json({
+          error: "You can only withdraw your request within 24 hours",
+        });
+      }
+
+      await db
+        .delete(teamJoinRequests)
+        .where(
+          and(
+            eq(teamJoinRequests.teamId, teamId),
+            eq(teamJoinRequests.userId, user.id),
+          ),
+        );
+
+      return res.status(200).json({ message: "Withdrawn team join request" });
+    } catch (e) {
+      console.error(e);
+      return res.status(500).json({ error: "Error processing withdrawal" });
+    }
+  },
+);
+
+export const getTeamRequestStatus = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = req.user;
+    const { teamId } = req.params;
+
+    if (!user || !user.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!teamId) {
+      return res.status(400).json({ error: "Invalid team id" });
+    }
+
+    try {
+      const request = await db
+        .select()
+        .from(teamJoinRequests)
+        .where(
+          and(
+            eq(teamJoinRequests.teamId, teamId),
+            eq(teamJoinRequests.userId, user.id),
+          ),
+        );
+
+      const hasRequested = request.length > 0;
+
+      return res.status(200).json({
+        hasRequested,
+        request: hasRequested ? request[0] : null,
+      });
+    } catch (e) {
+      console.error("Error checking join request status:", e);
+      return res.status(500).json({ error: "Failed to fetch request status" });
     }
   },
 );

@@ -58,7 +58,7 @@ export const CreateTeam = () => {
     <Dialog open={open} onOpenChange={setOpen}>
       <form>
         <DialogTrigger asChild>
-          <Button variant="outline">Create Team</Button>
+          <Button>Create Team</Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

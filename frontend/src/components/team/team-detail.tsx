@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,20 +7,51 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useSessionStore } from "@/store/session";
-import { useGetTeamByIdSync } from "@/sync/teams";
+import {
+  useGetTeamByIdSync,
+  useGetTeamRequestStatusSync,
+  useRequestToJoinTeamSync,
+} from "@/sync/teams";
 import { useGetUserByIdSync } from "@/sync/user";
 import { Crown, Loader } from "lucide-react";
+import { Button } from "../ui/button";
+import { Textarea } from "../ui/textarea";
+import _ from "lodash";
 
 export const TeamDetail = ({
   teamId,
+  cohortId,
   open,
   setOpen,
+  isJoinable,
 }: {
   teamId: string;
+  cohortId: string;
   open: boolean;
   setOpen: (open: boolean) => void;
+  isJoinable: boolean;
 }) => {
   const { data: team } = useGetTeamByIdSync(teamId);
+  const { data: requestStatus } = useGetTeamRequestStatusSync(teamId);
+  const { mutate } = useRequestToJoinTeamSync();
+
+  const [showNoteField, setShowNoteField] = useState(false);
+  const [note, setNote] = useState("");
+
+  const handleJoinTeamClick = () => {
+    if (!showNoteField) {
+      setShowNoteField(true);
+    } else {
+      handleJoinTeam(note);
+    }
+  };
+
+  const handleJoinTeam = (note: string) => {
+    mutate({ teamId, note, cohortId });
+    setOpen(false);
+    setShowNoteField(false);
+    setNote("");
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -71,9 +103,37 @@ export const TeamDetail = ({
                 </p>
               )}
             </section>
+
+            {requestStatus.request.status ? (
+              <div className="flex justify-end">
+                <Button disabled={true}>
+                  {_.capitalize(requestStatus.request.status)}
+                </Button>
+              </div>
+            ) : (
+              isJoinable && (
+                <section className="space-y-2">
+                  {showNoteField && (
+                    <Textarea
+                      placeholder="Write a note to the team (optional)"
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      className="w-full"
+                    />
+                  )}
+                  <div className="flex justify-end">
+                    <Button onClick={handleJoinTeamClick}>
+                      {showNoteField ? "Send Request" : "Join Team"}
+                    </Button>
+                  </div>
+                </section>
+              )
+            )}
           </div>
         ) : (
-          <Loader className="h-6 w-6 animate-spin" />
+          <div className="flex justify-center items-center py-8">
+            <Loader className="h-6 w-6 animate-spin" />
+          </div>
         )}
       </DialogContent>
     </Dialog>
@@ -92,9 +152,9 @@ const Member = ({
 
   return (
     <li key={userId} className="break-all">
-      <p className="flex items-center gap-2 ">
+      <p className="flex items-center gap-2">
         {user?.id === userId ? "You" : data?.user[0].name}{" "}
-        {isLeader ? <Crown size={12} color="white" /> : ""}
+        {isLeader && <Crown size={12} color="white" />}
       </p>
     </li>
   );
