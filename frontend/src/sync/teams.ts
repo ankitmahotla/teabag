@@ -6,6 +6,7 @@ import {
 } from "@/api/mutation";
 import {
   GET_COHORT_TEAMS,
+  GET_PENDING_TEAM_JOIN_REQUESTS,
   GET_TEAM_BY_ID,
   GET_TEAM_REQUEST_STATUS,
   GET_USER_TEAM_BY_COHORT,
@@ -97,5 +98,14 @@ export const useWithdrawTeamJoiningRequestSync = () => {
     onError: (error) => {
       console.error(error);
     },
+  });
+};
+
+export const useGetPendingTeamJoinRequestsSync = (teamId: string) => {
+  const isEnabled = Boolean(teamId);
+  return useQuery({
+    queryKey: ["pendingRequests", teamId],
+    queryFn: () => GET_PENDING_TEAM_JOIN_REQUESTS(teamId),
+    enabled: isEnabled,
   });
 };

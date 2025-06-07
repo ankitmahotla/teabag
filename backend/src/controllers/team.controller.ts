@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { asyncHandler } from "../utils/async-handler";
 import { db } from "../db";
-import { teamJoinRequests, teamMemberships, teams } from "../db/schema";
+import { teamJoinRequests, teamMemberships, teams, users } from "../db/schema";
 import { and, eq, isNull } from "drizzle-orm";
 
 export const getAllTeams = asyncHandler(async (req: Request, res: Response) => {
@@ -388,6 +388,43 @@ export const getTeamRequestStatus = asyncHandler(
     } catch (e) {
       console.error("Error checking join request status:", e);
       return res.status(500).json({ error: "Failed to fetch request status" });
+    }
+  },
+);
+
+export const getPendingTeamJoinRequests = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { teamId } = req.params;
+
+    if (!teamId) {
+      return res.status(400).json({ error: "Invalid team id" });
+    }
+
+    try {
+      const requests = await db
+        .select({
+          id: teamJoinRequests.id,
+          userId: teamJoinRequests.userId,
+          email: users.email,
+          name: users.name,
+          note: teamJoinRequests.note,
+          createdAt: teamJoinRequests.createdAt,
+        })
+        .from(teamJoinRequests)
+        .innerJoin(users, eq(teamJoinRequests.userId, users.id))
+        .where(
+          and(
+            eq(teamJoinRequests.teamId, teamId),
+            eq(teamJoinRequests.status, "pending"),
+          ),
+        );
+
+      return res.status(200).json({ requests });
+    } catch (e) {
+      console.error("Error fetching pending join requests:", e);
+      return res
+        .status(500)
+        .json({ error: "Failed to fetch pending requests" });
     }
   },
 );

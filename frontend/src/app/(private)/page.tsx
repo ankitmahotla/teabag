@@ -6,7 +6,7 @@ import { Suspense } from "react";
 
 export default function HomePage() {
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10 space-y-10">
+    <div className="max-w-6xl mx-auto p-6">
       <Suspense fallback={<Loader className="h-6 w-6 animate-spin" />}>
         <UserTeam />
       </Suspense>
