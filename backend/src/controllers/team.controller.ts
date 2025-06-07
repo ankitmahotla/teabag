@@ -404,6 +404,7 @@ export const getPendingTeamJoinRequests = asyncHandler(
       const requests = await db
         .select({
           id: teamJoinRequests.id,
+          teamId: teamJoinRequests.teamId,
           userId: teamJoinRequests.userId,
           email: users.email,
           name: users.name,
@@ -425,6 +426,66 @@ export const getPendingTeamJoinRequests = asyncHandler(
       return res
         .status(500)
         .json({ error: "Failed to fetch pending requests" });
+    }
+  },
+);
+
+export const updateTeamJoinRequestStatus = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = req.user;
+    const { teamId, requestId } = req.params;
+    const { status } = req.body;
+
+    if (!teamId || !requestId || !status) {
+      return res.status(400).json({ error: "Invalid request" });
+    }
+
+    const validStatuses = ["accepted", "rejected"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: "Invalid status value" });
+    }
+
+    try {
+      const team = await db
+        .select()
+        .from(teams)
+        .where(and(eq(teams.id, teamId), eq(teams.leaderId, user.id)))
+        .limit(1);
+
+      if (!team.length) {
+        return res
+          .status(403)
+          .json({ error: "Not authorized to update this request" });
+      }
+
+      const updatedRequest = await db
+        .update(teamJoinRequests)
+        .set({ status })
+        .where(
+          and(
+            eq(teamJoinRequests.teamId, teamId),
+            eq(teamJoinRequests.id, requestId),
+          ),
+        )
+        .returning({
+          id: teamJoinRequests.id,
+          userId: teamJoinRequests.userId,
+          status: teamJoinRequests.status,
+        });
+
+      const request = updatedRequest[0];
+
+      if (request?.status === "accepted") {
+        await db.insert(teamMemberships).values({
+          teamId,
+          userId: request.userId,
+        });
+      }
+
+      return res.status(200).json({ request });
+    } catch (e) {
+      console.error("Error updating join request status:", e);
+      return res.status(500).json({ error: "Failed to update request status" });
     }
   },
 );

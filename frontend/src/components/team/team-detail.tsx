@@ -123,9 +123,13 @@ export const TeamDetail = ({
                     {requestStatus.canWithdraw ? "Withdraw" : "Wait 24h"}
                   </Button>
                 </div>
-              ) : (
+              ) : requestStatus.request.status === "accepted" ? null : (
                 <div className="flex justify-end">
-                  <Button variant="destructive" disabled={true}>
+                  <Button
+                    variant="destructive"
+                    disabled
+                    className="cursor-default"
+                  >
                     Rejected
                   </Button>
                 </div>

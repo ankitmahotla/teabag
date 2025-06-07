@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { Button } from "../ui/button";
+import { useUpdateTeamJoinRequestStatusSync } from "@/sync/teams";
 
 export const RequestActionModal = ({
   request,
@@ -14,14 +15,16 @@ export const RequestActionModal = ({
 }: {
   request: {
     id: string;
+    teamId: string;
     name: string;
     email: string;
     createdAt: string;
     note?: string;
-    profileUrl?: string; // Optional: link to their profile
+    profileUrl?: string;
   };
   onClose: () => void;
 }) => {
+  const { mutate } = useUpdateTeamJoinRequestStatusSync();
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md">
@@ -73,14 +76,24 @@ export const RequestActionModal = ({
             <Button
               variant="destructive"
               onClick={() => {
-                // Reject handler
+                mutate({
+                  teamId: request.teamId,
+                  requestId: request.id,
+                  status: "rejected",
+                });
+                onClose();
               }}
             >
               Reject
             </Button>
             <Button
               onClick={() => {
-                // Accept handler
+                mutate({
+                  teamId: request.teamId,
+                  requestId: request.id,
+                  status: "accepted",
+                });
+                onClose();
               }}
             >
               Accept

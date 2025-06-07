@@ -8,6 +8,7 @@ import {
   getTeamRequestStatus,
   requestToJoinTeam,
   togglePublishTeam,
+  updateTeamJoinRequestStatus,
   withdrawTeamJoiningRequest,
 } from "../controllers/team.controller";
 
@@ -22,6 +23,7 @@ router.post("/:teamId/request-join", requestToJoinTeam);
 router.delete("/:teamId/request-join", withdrawTeamJoiningRequest);
 router.put("/:teamId/toggle-publish", togglePublishTeam);
 router.get("/:teamId/pending-requests", getPendingTeamJoinRequests);
+router.put("/:teamId/requests/:requestId/status", updateTeamJoinRequestStatus);
 
 router.get("/:id", getTeamById);
 router.post("/", createTeam);

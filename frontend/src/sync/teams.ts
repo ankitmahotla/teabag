@@ -2,6 +2,7 @@ import {
   CREATE_TEAM,
   REQUEST_TEAM_JOIN,
   TOGGLE_PUBLISH_TEAM,
+  UPDATE_TEAM_JOIN_REQUEST_STATUS,
   WITHDRAW_TEAM_JOIN_REQUEST,
 } from "@/api/mutation";
 import {
@@ -107,5 +108,18 @@ export const useGetPendingTeamJoinRequestsSync = (teamId: string) => {
     queryKey: ["pendingRequests", teamId],
     queryFn: () => GET_PENDING_TEAM_JOIN_REQUESTS(teamId),
     enabled: isEnabled,
+  });
+};
+
+export const useUpdateTeamJoinRequestStatusSync = () => {
+  return useMutation({
+    mutationFn: UPDATE_TEAM_JOIN_REQUEST_STATUS,
+    onSuccess: () => {
+      toast.success("Request status updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["pendingRequests"] });
+    },
+    onError: (error) => {
+      console.error(error);
+    },
   });
 };
