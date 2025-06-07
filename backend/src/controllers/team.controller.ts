@@ -259,9 +259,46 @@ export const requestToJoinTeam = asyncHandler(
         );
 
       if (existingRequest.length > 0) {
-        return res.status(400).json({
-          error: "You have already requested to join this team",
-        });
+        const existing = existingRequest[0];
+
+        if (["pending", "accepted"].includes(existing.status)) {
+          return res.status(400).json({
+            error: `You already have a ${existing?.status} request to this team`,
+          });
+        }
+
+        if (existing?.status === "withdrawn") {
+          const withdrawAtTime = existing?.withdrawnAt?.getTime();
+          const now = Date.now();
+          const timeElapsed = now - (withdrawAtTime ?? 0);
+
+          if (timeElapsed < 1000 * 60 * 60 * 24) {
+            return res.status(400).json({
+              error: "You can only send a rejoin request after 24 hours",
+            });
+          }
+
+          await db
+            .update(teamJoinRequests)
+            .set({
+              note,
+              status: "pending",
+              withdrawnAt: null,
+              createdAt: new Date(),
+            })
+            .where(eq(teamJoinRequests.id, existing.id));
+
+          return res
+            .status(200)
+            .json({ message: "Re-activated withdrawn request" });
+        }
+
+        if (existing?.status === "rejected") {
+          return res.status(400).json({
+            error:
+              "Your request was rejected. You cannot reapply to this team.",
+          });
+        }
       }
 
       await db
@@ -327,7 +364,11 @@ export const withdrawTeamJoiningRequest = asyncHandler(
       }
 
       await db
-        .delete(teamJoinRequests)
+        .update(teamJoinRequests)
+        .set({
+          withdrawnAt: new Date(),
+          status: "withdrawn",
+        })
         .where(
           and(
             eq(teamJoinRequests.teamId, teamId),

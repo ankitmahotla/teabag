@@ -40,26 +40,80 @@ export const TeamDetail = ({
   const [showNoteField, setShowNoteField] = useState(false);
   const [note, setNote] = useState("");
 
+  const request = requestStatus?.request;
+  const status = request?.status;
+  const withdrawnAt = request?.withdrawnAt
+    ? new Date(request.withdrawnAt)
+    : null;
+
+  const now = Date.now();
+  const canReapply =
+    withdrawnAt && now - withdrawnAt.getTime() >= 1000 * 60 * 60 * 24;
+
   const handleJoinTeamClick = () => {
     if (!showNoteField) {
       setShowNoteField(true);
     } else {
-      handleJoinTeam(note);
+      requestToJoinTeam({ teamId, note, cohortId });
+      resetDialogState();
     }
   };
 
-  const handleJoinTeam = (note: string) => {
-    requestToJoinTeam({ teamId, note, cohortId });
+  const handleWithdraw = () => {
+    withdrawTeamJoiningRequest(teamId);
+    resetDialogState();
+  };
+
+  const resetDialogState = () => {
     setOpen(false);
     setShowNoteField(false);
     setNote("");
   };
 
-  const handleWithdrawTeamJoiningRequest = () => {
-    withdrawTeamJoiningRequest(teamId);
-    setOpen(false);
-    setShowNoteField(false);
-    setNote("");
+  const renderActionButton = () => {
+    if (status === "pending") {
+      return (
+        <Button disabled={!requestStatus.canWithdraw} onClick={handleWithdraw}>
+          {requestStatus.canWithdraw ? "Withdraw" : "Wait 24h"}
+        </Button>
+      );
+    }
+
+    if (status === "accepted") return null;
+
+    if (status === "rejected") {
+      return (
+        <Button variant="destructive" disabled className="cursor-default">
+          Rejected
+        </Button>
+      );
+    }
+
+    if (status === "withdrawn") {
+      return (
+        <Button
+          onClick={handleJoinTeamClick}
+          disabled={!canReapply}
+          className={!canReapply ? "cursor-default" : ""}
+        >
+          {canReapply
+            ? showNoteField
+              ? "Send Request"
+              : "Join Team"
+            : "Wait 24h"}
+        </Button>
+      );
+    }
+
+    if (!status && isJoinable) {
+      return (
+        <Button onClick={handleJoinTeamClick}>
+          {showNoteField ? "Send Request" : "Join Team"}
+        </Button>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -73,6 +127,7 @@ export const TeamDetail = ({
             A summary of the team and its members.
           </DialogDescription>
         </DialogHeader>
+
         {team ? (
           <div className="mt-4 space-y-6">
             <section className="space-y-2">
@@ -85,9 +140,7 @@ export const TeamDetail = ({
                   Description:
                 </span>
                 <span className="col-span-2">
-                  {team.description?.trim() !== ""
-                    ? team.description
-                    : "No description provided"}
+                  {team.description?.trim() || "No description provided"}
                 </span>
               </div>
             </section>
@@ -96,15 +149,13 @@ export const TeamDetail = ({
               <h3 className="text-lg font-medium">Members</h3>
               {team.members.length > 0 ? (
                 <ul className="pl-4 list-disc text-sm space-y-1">
-                  {team.members.map(
-                    (member: { membershipId: string; userId: string }) => (
-                      <Member
-                        key={member.membershipId}
-                        userId={member.userId}
-                        isLeader={member.userId === team.leaderId}
-                      />
-                    ),
-                  )}
+                  {team.members.map((member) => (
+                    <Member
+                      key={member.membershipId}
+                      userId={member.userId}
+                      isLeader={member.userId === team.leaderId}
+                    />
+                  ))}
                 </ul>
               ) : (
                 <p className="text-sm text-muted-foreground">
@@ -113,46 +164,16 @@ export const TeamDetail = ({
               )}
             </section>
 
-            {requestStatus?.request?.status ? (
-              requestStatus.request.status === "pending" ? (
-                <div className="flex justify-end">
-                  <Button
-                    disabled={!requestStatus.canWithdraw}
-                    onClick={handleWithdrawTeamJoiningRequest}
-                  >
-                    {requestStatus.canWithdraw ? "Withdraw" : "Wait 24h"}
-                  </Button>
-                </div>
-              ) : requestStatus.request.status === "accepted" ? null : (
-                <div className="flex justify-end">
-                  <Button
-                    variant="destructive"
-                    disabled
-                    className="cursor-default"
-                  >
-                    Rejected
-                  </Button>
-                </div>
-              )
-            ) : (
-              isJoinable && (
-                <section className="space-y-2">
-                  {showNoteField && (
-                    <Textarea
-                      placeholder="Write a note to the team (optional)"
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      className="w-full"
-                    />
-                  )}
-                  <div className="flex justify-end">
-                    <Button onClick={handleJoinTeamClick}>
-                      {showNoteField ? "Send Request" : "Join Team"}
-                    </Button>
-                  </div>
-                </section>
-              )
+            {showNoteField && (
+              <Textarea
+                placeholder="Write a note to the team (optional)"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                className="w-full"
+              />
             )}
+
+            <div className="flex justify-end">{renderActionButton()}</div>
           </div>
         ) : (
           <div className="flex justify-center items-center py-8">

@@ -15,6 +15,7 @@ export const teamJoinRequestEnum = pgEnum("team_join_request", [
   "pending",
   "accepted",
   "rejected",
+  "withdrawn",
 ]);
 
 export const users = pgTable("users", {

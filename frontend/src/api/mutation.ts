@@ -49,7 +49,7 @@ export const REQUEST_TEAM_JOIN = async ({
 };
 
 export const WITHDRAW_TEAM_JOIN_REQUEST = async (teamId: string) => {
-  return (await API.delete(`/api/teams/${teamId}/request-join`)).data;
+  return (await API.put(`/api/teams/${teamId}/request-join`)).data;
 };
 
 export const UPDATE_TEAM_JOIN_REQUEST_STATUS = async ({

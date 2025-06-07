@@ -20,7 +20,7 @@ router.get("/", getAllTeams);
 
 router.get("/:teamId/request-status", getTeamRequestStatus);
 router.post("/:teamId/request-join", requestToJoinTeam);
-router.delete("/:teamId/request-join", withdrawTeamJoiningRequest);
+router.put("/:teamId/request-join", withdrawTeamJoiningRequest);
 router.put("/:teamId/toggle-publish", togglePublishTeam);
 router.get("/:teamId/pending-requests", getPendingTeamJoinRequests);
 router.put("/:teamId/requests/:requestId/status", updateTeamJoinRequestStatus);
