@@ -12,8 +12,10 @@ export const useGetUserByIdSync = (userId: string) => {
 };
 
 export const useGetUserTeamJoiningRequestsByCohortSync = (cohortId: string) => {
+  const enabled = typeof cohortId === "string" && cohortId.trim() !== "";
   return useQuery({
     queryKey: ["user", "requests", cohortId],
     queryFn: () => GET_USER_TEAM_JOINING_REQUESTS_BY_COHORT(cohortId),
+    enabled,
   });
 };
