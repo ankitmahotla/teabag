@@ -1,5 +1,6 @@
 import {
   CREATE_TEAM,
+  DISBAND_TEAM,
   REQUEST_TEAM_JOIN,
   TOGGLE_PUBLISH_TEAM,
   UPDATE_TEAM_JOIN_REQUEST_STATUS,
@@ -117,6 +118,19 @@ export const useUpdateTeamJoinRequestStatusSync = () => {
     onSuccess: () => {
       toast.success("Request status updated successfully");
       queryClient.invalidateQueries({ queryKey: ["pendingRequests"] });
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+};
+
+export const useDisbandTeamSync = () => {
+  return useMutation({
+    mutationFn: DISBAND_TEAM,
+    onSuccess: () => {
+      toast.success("Team disbanded successfully");
+      queryClient.invalidateQueries({ queryKey: ["userTeam"] });
     },
     onError: (error) => {
       console.error(error);

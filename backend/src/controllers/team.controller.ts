@@ -22,7 +22,13 @@ export const getAllTeams = asyncHandler(async (req: Request, res: Response) => {
     const teamsInCohort = await db
       .select()
       .from(teams)
-      .where(and(eq(teams.cohortId, cohortId), eq(teams.isPublished, true)));
+      .where(
+        and(
+          eq(teams.cohortId, cohortId),
+          eq(teams.isPublished, true),
+          isNull(teams.disbandedAt),
+        ),
+      );
 
     return res.status(200).json(teamsInCohort);
   } catch (e) {
@@ -52,7 +58,13 @@ export const getTeamById = asyncHandler(async (req: Request, res: Response) => {
       })
       .from(teams)
       .innerJoin(teamMemberships, eq(teams.id, teamMemberships.teamId))
-      .where(eq(teams.id, id));
+      .where(
+        and(
+          eq(teams.id, id),
+          isNull(teams.disbandedAt),
+          isNull(teamMemberships.leftAt),
+        ),
+      );
 
     if (rows.length === 0) {
       return res.status(404).json({ error: "Team not found" });
@@ -529,10 +541,12 @@ export const getPendingTeamJoinRequests = asyncHandler(
         })
         .from(teamJoinRequests)
         .innerJoin(users, eq(teamJoinRequests.userId, users.id))
+        .innerJoin(teams, eq(teamJoinRequests.teamId, teams.id))
         .where(
           and(
             eq(teamJoinRequests.teamId, teamId),
             eq(teamJoinRequests.status, "pending"),
+            isNull(teams.disbandedAt),
           ),
         );
 
@@ -607,6 +621,22 @@ export const updateTeamJoinRequestStatus = asyncHandler(
           );
 
         if (existingMembership.length === 0) {
+          const activeMembers = await db
+            .select()
+            .from(teamMemberships)
+            .where(
+              and(
+                eq(teamMemberships.teamId, teamId),
+                isNull(teamMemberships.leftAt),
+              ),
+            );
+
+          if (activeMembers.length >= 4 && status === "accepted") {
+            return res.status(400).json({
+              error: "Cannot accept request — team is already full",
+            });
+          }
+
           await db.insert(teamMemberships).values({
             teamId,
             userId: request.userId,
@@ -636,3 +666,75 @@ export const updateTeamJoinRequestStatus = asyncHandler(
     }
   },
 );
+
+export const disbandTeam = asyncHandler(async (req: Request, res: Response) => {
+  const user = req.user;
+  const { teamId } = req.params;
+  const { reason } = req.body;
+
+  if (!teamId) {
+    return res.status(400).json({ error: "Missing teamId" });
+  }
+
+  if (!reason || reason.trim().length === 0) {
+    return res.status(400).json({ error: "Disband reason is required" });
+  }
+
+  try {
+    const [team] = await db.select().from(teams).where(eq(teams.id, teamId));
+
+    if (!team) {
+      return res.status(404).json({ error: "Team not found" });
+    }
+
+    if (team.leaderId !== user.id) {
+      return res
+        .status(403)
+        .json({ error: "Only the team leader can disband the team" });
+    }
+
+    await db.transaction(async (tx) => {
+      await tx
+        .update(teams)
+        .set({
+          disbandedAt: new Date(),
+          disbandReason: reason,
+        })
+        .where(eq(teams.id, teamId));
+
+      await tx
+        .update(teamMemberships)
+        .set({
+          leftAt: new Date(),
+          leftReason: `Disbanded by leader: ${user.name}`,
+        })
+        .where(eq(teamMemberships.teamId, teamId));
+
+      await tx
+        .update(teamJoinRequests)
+        .set({
+          status: "withdrawn",
+          withdrawnAt: new Date(),
+        })
+        .where(
+          and(
+            eq(teamJoinRequests.teamId, teamId),
+            eq(teamJoinRequests.status, "pending"),
+          ),
+        );
+
+      await tx.insert(userInteractions).values({
+        userId: user.id,
+        type: "disbanded_team",
+        teamId,
+        note: `Team '${team.name}' disbanded by ${user.name}. Reason: ${reason}`,
+        createdAt: new Date(),
+      });
+    });
+
+    return res.status(200).json({ message: "Team disbanded successfully" });
+  } catch (e) {
+    console.error("Error disbanding team:", e);
+    return res.status(500).json({ error: "Failed to disband team" });
+  }
+});

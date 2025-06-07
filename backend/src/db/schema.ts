@@ -7,6 +7,7 @@ import {
   text,
   unique,
   boolean,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 export const userRoleEnum = pgEnum("user_role", ["admin", "user"]);
@@ -16,6 +17,12 @@ export const teamJoinRequestEnum = pgEnum("team_join_request", [
   "accepted",
   "rejected",
   "withdrawn",
+]);
+export const leaderTransferStatusEnum = pgEnum("leader_transfer_status", [
+  "pending",
+  "accepted",
+  "rejected",
+  "cancelled",
 ]);
 
 export const users = pgTable("users", {
@@ -64,6 +71,7 @@ export const teams = pgTable("teams", {
   isPublished: boolean("is_published").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   disbandedAt: timestamp("disbanded_at"),
+  disbandReason: text("disband_reason"),
 });
 
 export const teamMemberships = pgTable(
@@ -78,6 +86,7 @@ export const teamMemberships = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     joinedAt: timestamp("joined_at").defaultNow().notNull(),
     leftAt: timestamp("left_at"),
+    leftReason: text("left_reason"),
   },
   (t) => [unique().on(t.teamId, t.userId)],
 );
@@ -96,6 +105,7 @@ export const teamJoinRequests = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     withdrawnAt: timestamp("withdrawn_at"),
     status: teamJoinRequestEnum("status").default("pending"),
+    profileLinks: jsonb("profile_links"),
   },
   (t) => [unique().on(t.teamId, t.userId)],
 );
@@ -138,4 +148,21 @@ export const userInteractions = pgTable("user_interactions", {
   relatedUserId: uuid("related_user_id").references(() => users.id),
   note: text("note"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const teamLeaderTransfers = pgTable("team_leader_transfers", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  teamId: uuid("team_id")
+    .notNull()
+    .references(() => teams.id, { onDelete: "cascade" }),
+  fromUserId: uuid("from_user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  toUserId: uuid("to_user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  status: leaderTransferStatusEnum("status").default("pending").notNull(),
+  reason: text("reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  respondedAt: timestamp("responded_at"),
 });

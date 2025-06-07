@@ -67,3 +67,13 @@ export const UPDATE_TEAM_JOIN_REQUEST_STATUS = async ({
     })
   ).data;
 };
+
+export const DISBAND_TEAM = async ({
+  teamId,
+  reason,
+}: {
+  teamId: string;
+  reason: string;
+}) => {
+  return (await API.post(`/api/teams/${teamId}/disband`, { reason })).data;
+};

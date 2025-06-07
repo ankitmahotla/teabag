@@ -97,6 +97,7 @@ export const getUserTeamByCohort = asyncHandler(
           and(
             eq(teamMemberships.userId, user.id),
             eq(teams.cohortId, cohortId),
+            isNull(teamMemberships.leftAt),
             isNull(teams.disbandedAt),
           ),
         );
@@ -109,13 +110,22 @@ export const getUserTeamByCohort = asyncHandler(
 
       const [team] = teamRows;
 
+      if (!team) {
+        return res.status(404).json({ error: "Team not found" });
+      }
+
       const members = await db
         .select({
           membershipId: teamMemberships.id,
           userId: teamMemberships.userId,
         })
         .from(teamMemberships)
-        .where(eq(teamMemberships.teamId, team.teamId));
+        .where(
+          and(
+            eq(teamMemberships.teamId, team.teamId),
+            isNull(teamMemberships.leftAt),
+          ),
+        );
 
       return res.status(200).json({
         teamDetails: [
@@ -160,6 +170,7 @@ export const getAllUserTeamJoiningRequestsByCohort = asyncHandler(
           and(
             eq(teamJoinRequests.userId, user.id),
             eq(teams.cohortId, cohortId),
+            isNull(teams.disbandedAt),
           ),
         );
 

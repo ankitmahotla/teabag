@@ -11,6 +11,7 @@ import { TeamMembers } from "./team-members";
 import { NoticeBoard } from "./notice-board";
 import { TeamNotFound } from "./team-notfound";
 import { PendingRequests } from "./pending-requests";
+import { DisbandTeamModal } from "./disband-team";
 
 export const UserTeam = () => {
   const { user } = useSessionStore();
@@ -49,12 +50,15 @@ export const UserTeam = () => {
             </div>
           </div>
           {isLeader && (
-            <Button
-              onClick={handlePublish}
-              variant={isPublished ? "outline" : "default"}
-            >
-              {isPublished ? "Unpublish Team" : "Publish Team"}
-            </Button>
+            <div className="flex  gap-4">
+              <Button
+                onClick={handlePublish}
+                variant={isPublished ? "outline" : "default"}
+              >
+                {isPublished ? "Unpublish" : "Publish"}
+              </Button>
+              <DisbandTeamModal teamId={team.teamId} />
+            </div>
           )}
         </div>
 
