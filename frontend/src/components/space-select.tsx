@@ -23,8 +23,10 @@ export function SpaceSelect() {
     }
   }, [data, spaceId, setSpaceId]);
 
+  const safeValue = spaceId || data?.cohortsDetails?.[0]?.cohortId;
+
   return (
-    <Select value={spaceId ?? ""} onValueChange={setSpaceId}>
+    <Select value={safeValue} onValueChange={setSpaceId}>
       <SelectTrigger className="w-[180px]">
         <SelectValue placeholder="Select a space" />
       </SelectTrigger>
