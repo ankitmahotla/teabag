@@ -34,10 +34,10 @@ const Member = ({ userId }: { userId: string }) => {
           {" "}
           {user?.id === userId
             ? "You"
-            : _.capitalize(data?.user[0].name?.slice(0, 1) ?? "T")}
+            : _.capitalize(data?.user.name?.slice(0, 1) ?? "T")}
         </AvatarFallback>
       </Avatar>
-      <p> {user?.id === userId ? "You" : data?.user[0].name} </p>
+      <p> {user?.id === userId ? "You" : data?.user.name} </p>
     </div>
   );
 };

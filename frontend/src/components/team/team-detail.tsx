@@ -198,7 +198,7 @@ const Member = ({
   return (
     <li key={userId} className="break-all">
       <p className="flex items-center gap-2">
-        {user?.id === userId ? "You" : data?.user[0].name}{" "}
+        {user?.id === userId ? "You" : data?.user.name}{" "}
         {isLeader && <Crown size={12} color="white" />}
       </p>
     </li>

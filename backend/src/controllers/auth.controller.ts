@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { OAuth2Client } from "google-auth-library";
 import { db } from "../db";
-import { users } from "../db/schema";
+import { userInteractions, users } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { generateTokens } from "../lib/tokens";
 import { verifyToken } from "../utils/verify-token";
@@ -51,15 +51,17 @@ export const signIn = asyncHandler(async (req: Request, res: Response) => {
 
     if (!user) {
       return res
-        .status(500)
-        .json({ error: "User not part of chaicode platform" });
+        .status(403)
+        .json({ error: "Access denied: not part of Chaicode platform" });
     } else if (user.lastLoginAt === null) {
+      const safeName = name?.trim() || "Unknown User";
+
       await db
         .update(users)
         .set({
           googleId,
           email,
-          name,
+          name: safeName,
           lastLoginAt: new Date(),
         })
         .where(eq(users.id, user.id));
@@ -70,9 +72,21 @@ export const signIn = asyncHandler(async (req: Request, res: Response) => {
         .where(eq(users.id, user.id));
     }
 
+    user = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, user.id))
+      .then((rows) => rows[0]);
+
     if (!user) {
       return res.status(500).json({ error: "User not found" });
     }
+
+    await db.insert(userInteractions).values({
+      userId: user.id,
+      type: "login",
+      note: "User signed in via Google",
+    });
 
     const { accessToken, refreshToken } = generateTokens({ id: user.id });
 
@@ -147,7 +161,7 @@ export const refreshTokens = asyncHandler(
       const [user] = await db.select().from(users).where(eq(users.id, id));
 
       if (!user) {
-        return res.status(404).json({ error: "User not found" });
+        return res.status(401).json({ error: "Invalid user session" });
       }
 
       const { accessToken, refreshToken } = generateTokens({ id: user.id });
@@ -176,7 +190,9 @@ export const refreshTokens = asyncHandler(
       });
     } catch (e) {
       console.error("Token refresh failed:", e);
-      return res.status(500).json({ error: "Internal server error" });
+      return res
+        .status(401)
+        .json({ error: "Invalid or expired refresh token" });
     }
   },
 );

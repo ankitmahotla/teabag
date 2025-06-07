@@ -19,7 +19,7 @@ export const getUserById = asyncHandler(async (req: Request, res: Response) => {
   }
 
   try {
-    const user = await db
+    const usersList = await db
       .select({
         id: users.id,
         email: users.email,
@@ -29,11 +29,11 @@ export const getUserById = asyncHandler(async (req: Request, res: Response) => {
       .from(users)
       .where(eq(users.id, id));
 
-    if (!user) {
+    if (usersList.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    return res.status(200).json({ user });
+    return res.status(200).json({ user: usersList[0] });
   } catch (e) {
     console.error(e);
     return res.status(500).json({ error: "Internal Server Error" });
@@ -74,6 +74,10 @@ export const getUserTeamByCohort = asyncHandler(
     const user = req.user;
     const { cohortId } = req.params;
 
+    if (!user || !user.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
     if (!cohortId) {
       return res.status(400).json({ error: "Invalid cohort id" });
     }
@@ -103,7 +107,7 @@ export const getUserTeamByCohort = asyncHandler(
           .json({ error: "User is not a part of any teams in the cohort" });
       }
 
-      const team = teamRows[0]!;
+      const [team] = teamRows;
 
       const members = await db
         .select({
@@ -132,6 +136,10 @@ export const getAllUserTeamJoiningRequestsByCohort = asyncHandler(
   async (req: Request, res: Response) => {
     const user = req.user;
     const cohortId = req.params.cohortId;
+
+    if (!user || !user.id) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
 
     if (!cohortId) {
       return res.status(400).json({ error: "Cohort ID is required" });

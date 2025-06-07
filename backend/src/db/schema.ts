@@ -127,14 +127,15 @@ export const teamNoticeBoard = pgTable("team_notice_board", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const teamNotes = pgTable("team_notes", {
+export const userInteractions = pgTable("user_interactions", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  teamId: uuid("team_id")
-    .notNull()
-    .references(() => teams.id, { onDelete: "cascade" }),
-  note: text("note").notNull(),
+  type: text("type").notNull(),
+  teamId: uuid("team_id").references(() => teams.id),
+  cohortId: uuid("cohort_id").references(() => cohorts.id),
+  relatedUserId: uuid("related_user_id").references(() => users.id),
+  note: text("note"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
