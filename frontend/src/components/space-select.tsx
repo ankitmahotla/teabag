@@ -1,5 +1,4 @@
-import * as React from "react";
-
+import { useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -17,6 +16,12 @@ import useSpaceStore from "@/store/space";
 export function SpaceSelect() {
   const { data } = useGetUserCohortsSync();
   const { spaceId, setSpaceId } = useSpaceStore();
+
+  useEffect(() => {
+    if (!spaceId && data?.cohortsDetails?.length) {
+      setSpaceId(data.cohortsDetails[0].cohortId);
+    }
+  }, [data, spaceId, setSpaceId]);
 
   return (
     <Select value={spaceId ?? ""} onValueChange={setSpaceId}>
