@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSessionStore } from "@/store/session";
 import { useGetUserByIdSync } from "@/sync/user";
+import _ from "lodash";
 
 type MemberProp = {
   members: {
@@ -31,7 +32,9 @@ const Member = ({ userId }: { userId: string }) => {
       <Avatar className="mx-auto mb-2 h-10 w-10">
         <AvatarFallback>
           {" "}
-          {user?.id === userId ? "You" : data?.user[0].name}
+          {user?.id === userId
+            ? "You"
+            : _.capitalize(data?.user[0].name?.slice(0, 1) ?? "T")}
         </AvatarFallback>
       </Avatar>
       <p> {user?.id === userId ? "You" : data?.user[0].name} </p>
