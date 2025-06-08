@@ -14,12 +14,16 @@ import { useDisbandTeamSync } from "@/sync/teams";
 
 interface DisbandTeamDialogProps {
   teamId: string;
+  cohortId: string;
 }
 
-export const DisbandTeamModal = ({ teamId }: DisbandTeamDialogProps) => {
+export const DisbandTeamModal = ({
+  teamId,
+  cohortId,
+}: DisbandTeamDialogProps) => {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
-  const { mutate: disbandTeam } = useDisbandTeamSync();
+  const { mutate: disbandTeam } = useDisbandTeamSync(cohortId);
 
   const handleDisband = () => {
     if (!reason.trim()) return;

@@ -35,19 +35,6 @@ export const useGetTeamByIdSync = (teamId: string) => {
   });
 };
 
-export const useCreateTeamSync = () => {
-  return useMutation({
-    mutationFn: CREATE_TEAM,
-    onSuccess: () => {
-      toast.success("Team created successfully");
-      queryClient.invalidateQueries({ queryKey: ["teams", "team"] });
-    },
-    onError: (error) => {
-      console.error(error);
-    },
-  });
-};
-
 export const useGetUserTeamByCohortSync = (cohortId: string) => {
   const isEnabled = Boolean(cohortId);
   return useQuery({
@@ -125,15 +112,53 @@ export const useUpdateTeamJoinRequestStatusSync = () => {
   });
 };
 
-export const useDisbandTeamSync = () => {
+export const useCreateTeamSync = (cohortId: string) => {
+  return useMutation({
+    mutationFn: CREATE_TEAM,
+    onMutate: async (newTeam) => {
+      await queryClient.cancelQueries({ queryKey: ["userTeam", cohortId] });
+      const previousUserTeam = queryClient.getQueryData(["userTeam", cohortId]);
+      queryClient.setQueryData(["userTeam", cohortId], newTeam);
+      return { previousUserTeam };
+    },
+    onError: (err, newTeam, context) => {
+      console.error(err);
+      queryClient.setQueryData(
+        ["userTeam", cohortId],
+        context?.previousUserTeam,
+      );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["userTeam", cohortId] });
+    },
+    onSuccess: () => {
+      toast.success("Team created successfully");
+      queryClient.invalidateQueries({ queryKey: ["teams", "team"] });
+    },
+  });
+};
+
+export const useDisbandTeamSync = (cohortId: string) => {
   return useMutation({
     mutationFn: DISBAND_TEAM,
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["userTeam", cohortId] });
+      const previousUserTeam = queryClient.getQueryData(["userTeam", cohortId]);
+      queryClient.setQueryData(["userTeam", cohortId], null);
+      return { previousUserTeam };
+    },
+    onError: (err, newTeam, context) => {
+      console.error(err);
+      queryClient.setQueryData(
+        ["userTeam", cohortId],
+        context?.previousUserTeam,
+      );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["userTeam", cohortId] });
+    },
     onSuccess: () => {
       toast.success("Team disbanded successfully");
-      queryClient.invalidateQueries({ queryKey: ["userTeam"] });
-    },
-    onError: (error) => {
-      console.error(error);
     },
   });
 };

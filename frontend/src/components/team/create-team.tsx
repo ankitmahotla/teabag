@@ -33,7 +33,7 @@ const formSchema = z.object({
 export const CreateTeam = () => {
   const [open, setOpen] = useState(false);
   const { spaceId } = useSpaceStore();
-  const { mutate } = useCreateTeamSync();
+  const { mutate } = useCreateTeamSync(spaceId!);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

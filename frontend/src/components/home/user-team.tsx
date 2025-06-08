@@ -57,7 +57,9 @@ export const UserTeam = () => {
               >
                 {isPublished ? "Unpublish" : "Publish"}
               </Button>
-              <DisbandTeamModal teamId={team.teamId} />
+              {spaceId && (
+                <DisbandTeamModal teamId={team.teamId} cohortId={spaceId} />
+              )}
             </div>
           )}
         </div>
