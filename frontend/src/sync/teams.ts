@@ -1,6 +1,7 @@
 import {
   CREATE_TEAM,
   DISBAND_TEAM,
+  KICK_TEAM_MEMBER,
   REQUEST_TEAM_JOIN,
   TOGGLE_PUBLISH_TEAM,
   UPDATE_TEAM_JOIN_REQUEST_STATUS,
@@ -10,6 +11,7 @@ import {
   GET_COHORT_TEAMS,
   GET_PENDING_TEAM_JOIN_REQUESTS,
   GET_TEAM_BY_ID,
+  GET_TEAM_MEMBERS,
   GET_TEAM_REQUEST_STATUS,
   GET_USER_TEAM_BY_COHORT,
 } from "@/api/query";
@@ -159,6 +161,39 @@ export const useDisbandTeamSync = (cohortId: string) => {
     },
     onSuccess: () => {
       toast.success("Team disbanded successfully");
+    },
+  });
+};
+
+export const useGetTeamMembersSync = (teamId: string) => {
+  return useQuery({
+    queryKey: ["teamMembers", teamId],
+    queryFn: () => GET_TEAM_MEMBERS(teamId),
+    enabled: !!teamId,
+  });
+};
+
+export const useKickTeamMemberSync = (cohortId: string) => {
+  return useMutation({
+    mutationFn: KICK_TEAM_MEMBER,
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["userTeam", cohortId] });
+      const previousUserTeam = queryClient.getQueryData(["userTeam", cohortId]);
+      queryClient.setQueryData(["userTeam", cohortId], null);
+      return { previousUserTeam };
+    },
+    onError: (err, newTeam, context) => {
+      console.error(err);
+      queryClient.setQueryData(
+        ["userTeam", cohortId],
+        context?.previousUserTeam,
+      );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["userTeam", cohortId] });
+    },
+    onSuccess: () => {
+      toast.success("Team member kicked successfully");
     },
   });
 };

@@ -4,6 +4,7 @@ import { db } from "../db";
 import {
   cohortMemberships,
   teamJoinRequests,
+  teamKickHistory,
   teamMemberships,
   teams,
   userInteractions,
@@ -738,3 +739,116 @@ export const disbandTeam = asyncHandler(async (req: Request, res: Response) => {
     return res.status(500).json({ error: "Failed to disband team" });
   }
 });
+
+export const kickTeamMember = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = req.user;
+    const { teamId } = req.params;
+    const { teamMemberId, reason } = req.body;
+
+    if (!teamId) {
+      return res.status(400).json({ error: "Team ID is required" });
+    }
+
+    if (!teamMemberId || !reason) {
+      return res
+        .status(400)
+        .json({ error: "Team member ID and reason are required" });
+    }
+
+    try {
+      const [team] = await db.select().from(teams).where(eq(teams.id, teamId));
+      if (!team) {
+        return res.status(404).json({ error: "Team not found" });
+      }
+
+      const [teamMember] = await db
+        .select({
+          name: users.name,
+          email: users.email,
+        })
+        .from(teamMemberships)
+        .innerJoin(users, eq(teamMemberships.userId, users.id))
+        .where(
+          and(
+            eq(teamMemberships.userId, teamMemberId),
+            eq(teamMemberships.teamId, teamId),
+          ),
+        );
+
+      if (!teamMember) {
+        return res.status(404).json({ error: "Team member not found" });
+      }
+
+      if (user.id !== team.leaderId) {
+        return res.status(403).json({
+          error: "You do not have permission to kick this team member",
+        });
+      }
+
+      await db.insert(teamKickHistory).values({
+        teamId,
+        kickedUserId: teamMemberId,
+        kickedById: user.id,
+        reason,
+      });
+
+      await db
+        .update(teamMemberships)
+        .set({ leftAt: new Date(), leftReason: reason })
+        .where(
+          and(
+            eq(teamMemberships.userId, teamMemberId),
+            eq(teamMemberships.teamId, teamId),
+          ),
+        );
+
+      await db.insert(userInteractions).values({
+        userId: user.id,
+        type: "kicked_team_member",
+        teamId,
+        relatedUserId: teamMemberId,
+      });
+
+      return res
+        .status(200)
+        .json({ message: "Team member kicked successfully" });
+    } catch (error) {
+      console.error("Error kicking team member:", error);
+      return res.status(500).json({ error: "Failed to kick team member" });
+    }
+  },
+);
+
+export const getTeamMembers = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { teamId } = req.params;
+
+    if (!teamId) {
+      return res.status(400).json({ error: "Team ID is required" });
+    }
+
+    try {
+      const [team] = await db.select().from(teams).where(eq(teams.id, teamId));
+
+      if (!team) {
+        return res.status(404).json({ error: "Team not found" });
+      }
+
+      const members = await db
+        .select()
+        .from(teamMemberships)
+        .where(
+          and(
+            eq(teamMemberships.teamId, teamId),
+            isNull(teamMemberships.leftAt),
+          ),
+        );
+
+      return res.status(200).json({ members });
+    } catch (e) {
+      console.error("Error fetching team members:", e);
+      return res.status(500).json({ error: "Failed to fetch team members" });
+    }
+  },
+);

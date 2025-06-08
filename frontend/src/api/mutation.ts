@@ -77,3 +77,20 @@ export const DISBAND_TEAM = async ({
 }) => {
   return (await API.post(`/api/teams/${teamId}/disband`, { reason })).data;
 };
+
+export const KICK_TEAM_MEMBER = async ({
+  teamId,
+  teamMemberId,
+  reason,
+}: {
+  teamId: string;
+  teamMemberId: string;
+  reason: string;
+}) => {
+  return (
+    await API.post(`/api/teams/${teamId}/kickUser`, {
+      teamMemberId,
+      reason,
+    })
+  ).data;
+};

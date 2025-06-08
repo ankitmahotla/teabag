@@ -51,3 +51,7 @@ export const GET_USER_TEAM_JOINING_REQUESTS_BY_COHORT = async (
 export const GET_PENDING_TEAM_JOIN_REQUESTS = async (teamId: string) => {
   return (await API.get(`/api/teams/${teamId}/pending-requests`)).data;
 };
+
+export const GET_TEAM_MEMBERS = async (teamId: string) => {
+  return (await API.get(`/api/teams/${teamId}/members`)).data;
+};

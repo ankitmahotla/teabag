@@ -114,26 +114,8 @@ export const getUserTeamByCohort = asyncHandler(
         return res.status(404).json({ error: "Team not found" });
       }
 
-      const members = await db
-        .select({
-          membershipId: teamMemberships.id,
-          userId: teamMemberships.userId,
-        })
-        .from(teamMemberships)
-        .where(
-          and(
-            eq(teamMemberships.teamId, team.teamId),
-            isNull(teamMemberships.leftAt),
-          ),
-        );
-
       return res.status(200).json({
-        teamDetails: [
-          {
-            ...team,
-            members,
-          },
-        ],
+        teamDetails: team,
       });
     } catch (e) {
       console.error(e);

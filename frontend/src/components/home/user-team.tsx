@@ -19,11 +19,11 @@ export const UserTeam = () => {
   const { data: userTeam } = useGetUserTeamByCohortSync(spaceId!);
   const { mutate } = useTogglePublishTeamSync();
 
-  if (!userTeam?.teamDetails?.length) {
+  if (!userTeam?.teamDetails) {
     return <TeamNotFound />;
   }
 
-  const team = userTeam.teamDetails[0];
+  const team = userTeam.teamDetails;
   const isLeader = team.leaderId === user?.id;
   const isPublished = team.isPublished;
 
@@ -77,7 +77,7 @@ export const UserTeam = () => {
         </div>
 
         <div className="space-y-4">
-          <TeamMembers members={team.members} />
+          <TeamMembers teamId={team.teamId} />
         </div>
 
         <div className="space-y-4">
