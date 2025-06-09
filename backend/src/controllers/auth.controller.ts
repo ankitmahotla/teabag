@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { OAuth2Client } from "google-auth-library";
 import { db } from "../db";
-import { userInteractions, users } from "../db/schema";
+import { users } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { generateTokens } from "../lib/tokens";
 import { verifyToken } from "../utils/verify-token";
@@ -81,12 +81,6 @@ export const signIn = asyncHandler(async (req: Request, res: Response) => {
     if (!user) {
       return res.status(500).json({ error: "User not found" });
     }
-
-    await db.insert(userInteractions).values({
-      userId: user.id,
-      type: "login",
-      note: "User signed in via Google",
-    });
 
     const { accessToken, refreshToken } = generateTokens({ id: user.id });
 

@@ -7,9 +7,10 @@ import {
   teamJoinRequests,
   teamMemberships,
   teams,
+  userInteractions,
   users,
 } from "../db/schema";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull, or } from "drizzle-orm";
 
 export const getUserById = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -19,7 +20,7 @@ export const getUserById = asyncHandler(async (req: Request, res: Response) => {
   }
 
   try {
-    const usersList = await db
+    const [user] = await db
       .select({
         id: users.id,
         email: users.email,
@@ -29,11 +30,23 @@ export const getUserById = asyncHandler(async (req: Request, res: Response) => {
       .from(users)
       .where(eq(users.id, id));
 
-    if (usersList.length === 0) {
+    if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    return res.status(200).json({ user: usersList[0] });
+    const interactions = await db
+      .select()
+      .from(userInteractions)
+      .where(
+        or(
+          eq(userInteractions.userId, user.id),
+          eq(userInteractions.relatedUserId, user.id),
+        ),
+      )
+      .orderBy(desc(userInteractions.createdAt))
+      .limit(20);
+
+    return res.status(200).json({ user, interactions });
   } catch (e) {
     console.error(e);
     return res.status(500).json({ error: "Internal Server Error" });

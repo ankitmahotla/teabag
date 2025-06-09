@@ -77,7 +77,7 @@ export const UserTeam = () => {
         </div>
 
         <div className="space-y-4">
-          <TeamMembers teamId={team.teamId} />
+          <TeamMembers team={team} />
         </div>
 
         <div className="space-y-4">

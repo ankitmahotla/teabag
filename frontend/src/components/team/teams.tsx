@@ -10,8 +10,8 @@ import { useState } from "react";
 
 export const Teams = () => {
   const { spaceId } = useSpaceStore();
-  const { data } = useGetCohortTeamsSync(spaceId ?? "");
-  const { data: userTeam } = useGetUserTeamByCohortSync(spaceId ?? "");
+  const { data } = useGetCohortTeamsSync(spaceId!);
+  const { data: userTeam } = useGetUserTeamByCohortSync(spaceId!);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
 
   return (
@@ -46,7 +46,7 @@ export const Teams = () => {
           teamId={selectedTeamId}
           cohortId={spaceId!}
           open={!!selectedTeamId}
-          isJoinable={!userTeam?.teamDetails?.length}
+          isJoinable={!userTeam?.teamDetails}
           setOpen={(open: boolean) => {
             if (!open) setSelectedTeamId(null);
           }}

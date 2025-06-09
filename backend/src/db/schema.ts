@@ -143,9 +143,13 @@ export const userInteractions = pgTable("user_interactions", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   type: text("type").notNull(),
-  teamId: uuid("team_id").references(() => teams.id),
-  cohortId: uuid("cohort_id").references(() => cohorts.id),
-  relatedUserId: uuid("related_user_id").references(() => users.id),
+  teamId: uuid("team_id").references(() => teams.id, { onDelete: "cascade" }),
+  cohortId: uuid("cohort_id").references(() => cohorts.id, {
+    onDelete: "cascade",
+  }),
+  relatedUserId: uuid("related_user_id").references(() => users.id, {
+    onDelete: "cascade",
+  }),
   note: text("note"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

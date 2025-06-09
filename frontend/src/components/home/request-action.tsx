@@ -8,6 +8,7 @@ import {
 import { format } from "date-fns";
 import { Button } from "../ui/button";
 import { useUpdateTeamJoinRequestStatusSync } from "@/sync/teams";
+import { UserProfile } from "./user-profile";
 
 export const RequestActionModal = ({
   request,
@@ -16,6 +17,7 @@ export const RequestActionModal = ({
   request: {
     id: string;
     teamId: string;
+    userId: string;
     name: string;
     email: string;
     createdAt: string;
@@ -25,6 +27,7 @@ export const RequestActionModal = ({
   onClose: () => void;
 }) => {
   const { mutate } = useUpdateTeamJoinRequestStatusSync();
+
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md">
@@ -60,17 +63,7 @@ export const RequestActionModal = ({
         </div>
 
         <div className="mt-6 flex flex-wrap justify-between items-center gap-3">
-          <Button
-            variant="outline"
-            onClick={() => {
-              if (request.profileUrl) {
-                window.open(request.profileUrl, "_blank");
-              }
-            }}
-            disabled={!request.profileUrl}
-          >
-            View Profile
-          </Button>
+          <UserProfile userId={request.userId} />
 
           <div className="flex gap-2 ml-auto">
             <Button

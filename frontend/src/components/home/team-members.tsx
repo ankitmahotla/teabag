@@ -6,27 +6,26 @@ import { UserProfile } from "./user-profile";
 import { useGetTeamMembersSync } from "@/sync/teams";
 
 type MemberProp = {
-  teamId: string;
+  team: any;
 };
 
-export const TeamMembers = ({ teamId }: MemberProp) => {
-  const { data } = useGetTeamMembersSync(teamId);
+export const TeamMembers = ({ team }: MemberProp) => {
+  const { data } = useGetTeamMembersSync(team.teamId);
   const members = data?.members ?? [];
-  // console.log(members);
-  // return <div>anc</div>;
+
   return (
     <section>
       <h2 className="text-lg font-medium mb-3">Team Members</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
         {members.map(({ id, userId }) => (
-          <Member teamId={teamId} key={id} userId={userId} />
+          <Member team={team} key={id} userId={userId} />
         ))}
       </div>
     </section>
   );
 };
 
-const Member = ({ teamId, userId }: { teamId: string; userId: string }) => {
+const Member = ({ team, userId }: { team: any; userId: string }) => {
   const { user } = useSessionStore();
   const { data } = useGetUserByIdSync(userId);
   return (
@@ -40,7 +39,7 @@ const Member = ({ teamId, userId }: { teamId: string; userId: string }) => {
         </AvatarFallback>
       </Avatar>
       <p className="mb-2"> {user?.id === userId ? "You" : data?.user.name} </p>
-      <UserProfile readOnly={false} userId={userId} teamId={teamId} />
+      <UserProfile readOnly={false} userId={userId} team={team} />
     </div>
   );
 };
