@@ -106,7 +106,10 @@ export const useUpdateTeamJoinRequestStatusSync = () => {
     mutationFn: UPDATE_TEAM_JOIN_REQUEST_STATUS,
     onSuccess: () => {
       toast.success("Request status updated successfully");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["pendingRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["teamMembers"] });
     },
     onError: (error) => {
       console.error(error);
@@ -176,22 +179,6 @@ export const useGetTeamMembersSync = (teamId: string) => {
 export const useKickTeamMemberSync = (teamId: string) => {
   return useMutation({
     mutationFn: KICK_TEAM_MEMBER,
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["teamMembers", teamId] });
-      const previousTeamMembers = queryClient.getQueryData([
-        "teamMembers",
-        teamId,
-      ]);
-      queryClient.setQueryData(["teamMembers", teamId], null);
-      return { previousTeamMembers };
-    },
-    onError: (err, _, context) => {
-      console.error(err);
-      queryClient.setQueryData(
-        ["teamMembers", teamId],
-        context?.previousTeamMembers,
-      );
-    },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["teamMembers", teamId] });
     },

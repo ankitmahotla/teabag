@@ -808,6 +808,7 @@ export const kickTeamMember = asyncHandler(
         type: "kicked_team_member",
         teamId,
         relatedUserId: teamMemberId,
+        note: reason,
       });
 
       return res

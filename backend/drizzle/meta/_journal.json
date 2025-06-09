@@ -36,6 +36,13 @@
       "when": 1749291554812,
       "tag": "0004_broken_salo",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1749472306097,
+      "tag": "0005_mature_fixer",
+      "breakpoints": true
     }
   ]
 }
