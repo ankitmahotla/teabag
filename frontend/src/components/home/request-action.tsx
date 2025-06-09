@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { Button } from "../ui/button";
 import { useUpdateTeamJoinRequestStatusSync } from "@/sync/teams";
 import { UserProfile } from "./user-profile";
+import { useState } from "react";
 
 export const RequestActionModal = ({
   request,
@@ -27,6 +28,7 @@ export const RequestActionModal = ({
   onClose: () => void;
 }) => {
   const { mutate } = useUpdateTeamJoinRequestStatusSync();
+  const [openModal, setOpenModal] = useState(false);
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -63,7 +65,11 @@ export const RequestActionModal = ({
         </div>
 
         <div className="mt-6 flex flex-wrap justify-between items-center gap-3">
-          <UserProfile userId={request.userId} />
+          <UserProfile
+            userId={request.userId}
+            open={openModal}
+            setOpen={setOpenModal}
+          />
 
           <div className="flex gap-2 ml-auto">
             <Button

@@ -36,10 +36,14 @@ export const UserProfile = ({
   userId,
   readOnly = true,
   team,
+  open,
+  setOpen,
 }: {
   userId: string;
   readOnly?: boolean;
   team?: any;
+  open: boolean;
+  setOpen: (open: boolean) => void;
 }) => {
   const { user } = useSessionStore();
   const { spaceId } = useSpaceStore();
@@ -54,13 +58,15 @@ export const UserProfile = ({
   });
 
   const onSubmit = (data: KickFormValues) => {
-    mutate({ teamId: team.id, teamMemberId: userId, reason: data.reason });
+    mutate({ teamId: team.teamId, teamMemberId: userId, reason: data.reason });
+    form.reset();
+    setOpen(false);
   };
 
   const recentInteractions = data?.interactions?.slice(0, 10);
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">View Profile</Button>
       </DialogTrigger>

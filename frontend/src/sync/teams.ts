@@ -173,24 +173,27 @@ export const useGetTeamMembersSync = (teamId: string) => {
   });
 };
 
-export const useKickTeamMemberSync = (cohortId: string) => {
+export const useKickTeamMemberSync = (teamId: string) => {
   return useMutation({
     mutationFn: KICK_TEAM_MEMBER,
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["userTeam", cohortId] });
-      const previousUserTeam = queryClient.getQueryData(["userTeam", cohortId]);
-      queryClient.setQueryData(["userTeam", cohortId], null);
-      return { previousUserTeam };
+      await queryClient.cancelQueries({ queryKey: ["teamMembers", teamId] });
+      const previousTeamMembers = queryClient.getQueryData([
+        "teamMembers",
+        teamId,
+      ]);
+      queryClient.setQueryData(["teamMembers", teamId], null);
+      return { previousTeamMembers };
     },
-    onError: (err, newTeam, context) => {
+    onError: (err, _, context) => {
       console.error(err);
       queryClient.setQueryData(
-        ["userTeam", cohortId],
-        context?.previousUserTeam,
+        ["teamMembers", teamId],
+        context?.previousTeamMembers,
       );
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["userTeam", cohortId] });
+      queryClient.invalidateQueries({ queryKey: ["teamMembers", teamId] });
     },
     onSuccess: () => {
       toast.success("Team member kicked successfully");

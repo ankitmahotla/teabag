@@ -4,6 +4,7 @@ import { useGetUserByIdSync } from "@/sync/user";
 import _ from "lodash";
 import { UserProfile } from "./user-profile";
 import { useGetTeamMembersSync } from "@/sync/teams";
+import { useState } from "react";
 
 type MemberProp = {
   team: any;
@@ -28,6 +29,7 @@ export const TeamMembers = ({ team }: MemberProp) => {
 const Member = ({ team, userId }: { team: any; userId: string }) => {
   const { user } = useSessionStore();
   const { data } = useGetUserByIdSync(userId);
+  const [open, setOpen] = useState(false);
   return (
     <div className="p-3 border rounded-md text-center text-sm">
       <Avatar className="mx-auto mb-2 h-10 w-10">
@@ -39,7 +41,13 @@ const Member = ({ team, userId }: { team: any; userId: string }) => {
         </AvatarFallback>
       </Avatar>
       <p className="mb-2"> {user?.id === userId ? "You" : data?.user.name} </p>
-      <UserProfile readOnly={false} userId={userId} team={team} />
+      <UserProfile
+        readOnly={false}
+        userId={userId}
+        team={team}
+        open={open}
+        setOpen={setOpen}
+      />
     </div>
   );
 };
