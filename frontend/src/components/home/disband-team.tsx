@@ -10,7 +10,21 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { useDisbandTeamSync } from "@/sync/teams";
+import {
+  useDisbandTeamSync,
+  useGetTeamMembersSync,
+  useTeamLeaderShipTransferRequestSync,
+} from "@/sync/teams";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useSessionStore } from "@/store/session";
 
 interface DisbandTeamDialogProps {
   teamId: string;
@@ -23,14 +37,38 @@ export const DisbandTeamModal = ({
 }: DisbandTeamDialogProps) => {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
-  const { mutate: disbandTeam } = useDisbandTeamSync(cohortId);
+  const [action, setAction] = useState<"disband" | "transfer">("disband");
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
-  const handleDisband = () => {
+  const { user } = useSessionStore();
+  const { data } = useGetTeamMembersSync(teamId);
+  const teamMembers =
+    data?.members?.filter((member) => member.userId !== user?.id) ?? [];
+
+  const { mutate: disbandTeam } = useDisbandTeamSync(cohortId);
+  const { mutate: transferLeadership } =
+    useTeamLeaderShipTransferRequestSync(teamId);
+
+  const handleAction = () => {
     if (!reason.trim()) return;
 
-    disbandTeam({ teamId, reason: reason.trim() });
+    if (action === "disband") {
+      disbandTeam({ teamId, reason: reason.trim() });
+    }
+
+    if (action === "transfer") {
+      if (!selectedUserId) return;
+      transferLeadership({
+        teamId,
+        receiverId: selectedUserId,
+        reason: reason.trim(),
+      });
+    }
+
     setOpen(false);
     setReason("");
+    setSelectedUserId(null);
+    setAction("disband");
   };
 
   return (
@@ -40,15 +78,50 @@ export const DisbandTeamModal = ({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Disband Team</DialogTitle>
+          <DialogTitle>Disband or Transfer Leadership</DialogTitle>
           <DialogDescription>
-            This action will remove all members from the team and archive the
-            group. You must provide a reason for disbanding.
+            You can either disband this team or transfer leadership to another
+            member. A reason is required.
           </DialogDescription>
         </DialogHeader>
 
+        <RadioGroup
+          value={action}
+          onValueChange={(value) => setAction(value as "disband" | "transfer")}
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="disband" id="disband" />
+            <Label htmlFor="disband">Disband the team</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="transfer" id="transfer" />
+            <Label htmlFor="transfer">Transfer leadership</Label>
+          </div>
+        </RadioGroup>
+
+        {action === "transfer" && (
+          <div className="space-y-2">
+            <Label>Select team member to transfer leadership to:</Label>
+            <Select
+              onValueChange={(val) => setSelectedUserId(val)}
+              value={selectedUserId ?? ""}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a member" />
+              </SelectTrigger>
+              <SelectContent>
+                {teamMembers.map((member) => (
+                  <SelectItem key={member.userId} value={member.userId}>
+                    {member?.name ?? member.userId}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         <Textarea
-          placeholder="Enter the reason for disbanding..."
+          placeholder="Enter the reason..."
           value={reason}
           onChange={(e) => setReason(e.target.value)}
         />
@@ -56,10 +129,12 @@ export const DisbandTeamModal = ({
         <DialogFooter>
           <Button
             variant="destructive"
-            onClick={handleDisband}
-            disabled={!reason.trim()}
+            onClick={handleAction}
+            disabled={
+              !reason.trim() || (action === "transfer" && !selectedUserId)
+            }
           >
-            Confirm Disband
+            {action === "disband" ? "Confirm Disband" : "Initiate Transfer"}
           </Button>
         </DialogFooter>
       </DialogContent>

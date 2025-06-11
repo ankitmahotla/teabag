@@ -55,3 +55,8 @@ export const GET_PENDING_TEAM_JOIN_REQUESTS = async (teamId: string) => {
 export const GET_TEAM_MEMBERS = async (teamId: string) => {
   return (await API.get(`/api/teams/${teamId}/members`)).data;
 };
+
+export const GET_PENDING_TEAM_LEADERSHIP_TRANSFERS = async () => {
+  return (await API.get("/api/teams/leadership-transfer/requests/pending"))
+    .data;
+};

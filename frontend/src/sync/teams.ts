@@ -3,6 +3,8 @@ import {
   DISBAND_TEAM,
   KICK_TEAM_MEMBER,
   REQUEST_TEAM_JOIN,
+  TEAM_LEADERSHIP_TRANSFER_REQUEST,
+  TEAM_LEADERSHIP_TRANSFER_RESPONSE,
   TOGGLE_PUBLISH_TEAM,
   UPDATE_TEAM_JOIN_REQUEST_STATUS,
   WITHDRAW_TEAM_JOIN_REQUEST,
@@ -10,6 +12,7 @@ import {
 import {
   GET_COHORT_TEAMS,
   GET_PENDING_TEAM_JOIN_REQUESTS,
+  GET_PENDING_TEAM_LEADERSHIP_TRANSFERS,
   GET_TEAM_BY_ID,
   GET_TEAM_MEMBERS,
   GET_TEAM_REQUEST_STATUS,
@@ -185,5 +188,40 @@ export const useKickTeamMemberSync = (teamId: string) => {
     onSuccess: () => {
       toast.success("Team member kicked successfully");
     },
+  });
+};
+
+export const useTeamLeaderShipTransferRequestSync = (teamId: string) => {
+  return useMutation({
+    mutationFn: TEAM_LEADERSHIP_TRANSFER_REQUEST,
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["teamMembers", teamId] });
+    },
+    onSuccess: () => {
+      toast.success("Team leader transfer request sent successfully");
+    },
+  });
+};
+
+export const useTeamLeadershipTransferResponse = (teamId: string) => {
+  return useMutation({
+    mutationFn: TEAM_LEADERSHIP_TRANSFER_RESPONSE,
+    onSuccess: (_, variables) => {
+      toast.success(`Leadership transfer ${variables.status}`);
+      queryClient.invalidateQueries({ queryKey: ["teamMembers", teamId] });
+      queryClient.invalidateQueries({
+        queryKey: ["teamLeadershipTransfers", teamId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["pendingLeadershipTransfers"],
+      });
+    },
+  });
+};
+
+export const usePendingTeamLeadershipTransfersSync = () => {
+  return useQuery({
+    queryKey: ["pendingLeadershipTransfers"],
+    queryFn: GET_PENDING_TEAM_LEADERSHIP_TRANSFERS,
   });
 };

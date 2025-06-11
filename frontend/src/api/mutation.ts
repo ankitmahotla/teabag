@@ -94,3 +94,35 @@ export const KICK_TEAM_MEMBER = async ({
     })
   ).data;
 };
+
+export const TEAM_LEADERSHIP_TRANSFER_REQUEST = async ({
+  teamId,
+  receiverId,
+  reason,
+}: {
+  teamId: string;
+  receiverId: string;
+  reason: string;
+}) => {
+  return (
+    await API.post(`/api/teams/${teamId}/leadership-transfer`, {
+      receiverId,
+      reason,
+    })
+  ).data;
+};
+
+export const TEAM_LEADERSHIP_TRANSFER_RESPONSE = async ({
+  transferRequestId,
+  status,
+}: {
+  transferRequestId: string;
+  status: "accepted" | "rejected" | "cancelled";
+}) => {
+  const response = await API.post("/api/teams/leadership-transfer/respond", {
+    transferRequestId,
+    status,
+  });
+
+  return response.data;
+};

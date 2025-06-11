@@ -9,10 +9,13 @@ import {
   getTeamMembers,
   getTeamRequestStatus,
   kickTeamMember,
+  teamLeadershipTransferRequest,
   requestToJoinTeam,
   togglePublishTeam,
   updateTeamJoinRequestStatus,
   withdrawTeamJoiningRequest,
+  teamLeadershipTransferResponse,
+  getPendingTeamLeadershipTransferRequests,
 } from "../controllers/team.controller";
 
 const router = Router();
@@ -20,6 +23,11 @@ const router = Router();
 router.use(authenticate);
 
 router.get("/", getAllTeams);
+
+router.get(
+  "/leadership-transfer/requests/pending",
+  getPendingTeamLeadershipTransferRequests,
+);
 
 router.get("/:teamId/request-status", getTeamRequestStatus);
 router.get("/:teamId/members", getTeamMembers);
@@ -30,6 +38,11 @@ router.get("/:teamId/pending-requests", getPendingTeamJoinRequests);
 router.put("/:teamId/requests/:requestId/status", updateTeamJoinRequestStatus);
 router.post("/:teamId/disband", disbandTeam);
 router.post("/:teamId/kickUser", kickTeamMember);
+router.post("/:teamId/leadership-transfer", teamLeadershipTransferRequest);
+router.post(
+  "/:teamId/leadership-transfer/respond",
+  teamLeadershipTransferResponse,
+);
 
 router.get("/:id", getTeamById);
 router.post("/", createTeam);

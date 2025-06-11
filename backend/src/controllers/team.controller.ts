@@ -5,14 +5,14 @@ import {
   cohortMemberships,
   teamJoinRequests,
   teamKickHistory,
+  teamLeaderTransfers,
   teamMemberships,
   teams,
   userInteractions,
   users,
 } from "../db/schema";
-import { and, eq, isNull } from "drizzle-orm";
-
-import { count, eq, isNull, and } from "drizzle-orm";
+import { and, eq, isNull, count, or } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 export const getAllTeams = asyncHandler(async (req: Request, res: Response) => {
   const cohortId = req.query.cohortId as string;
@@ -851,8 +851,14 @@ export const getTeamMembers = asyncHandler(
       }
 
       const members = await db
-        .select()
+        .select({
+          id: teamMemberships.id,
+          userId: teamMemberships.userId,
+          name: users.name,
+          email: users.email,
+        })
         .from(teamMemberships)
+        .innerJoin(users, eq(teamMemberships.userId, users.id))
         .where(
           and(
             eq(teamMemberships.teamId, teamId),
@@ -864,6 +870,223 @@ export const getTeamMembers = asyncHandler(
     } catch (e) {
       console.error("Error fetching team members:", e);
       return res.status(500).json({ error: "Failed to fetch team members" });
+    }
+  },
+);
+
+export const teamLeadershipTransferRequest = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = req.user;
+
+    const { teamId } = req.params;
+    const { receiverId, reason } = req.body;
+
+    if (!teamId || !receiverId || !reason) {
+      console.log(
+        "teamId:",
+        teamId,
+        "receiverId:",
+        receiverId,
+        "reason:",
+        reason,
+      );
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+      const [team] = await db
+        .select()
+        .from(teams)
+        .where(and(eq(teams.id, teamId), isNull(teams.disbandedAt)));
+
+      if (!team) {
+        return res.status(404).json({ error: "Team not found" });
+      }
+
+      const [receiver] = await db
+        .select()
+        .from(users)
+        .leftJoin(
+          teamMemberships,
+          and(
+            eq(users.id, teamMemberships.userId),
+            eq(teamMemberships.teamId, teamId),
+            isNull(teamMemberships.leftAt),
+          ),
+        )
+        .where(eq(users.id, receiverId));
+
+      if (!receiver || !receiver.team_memberships) {
+        return res
+          .status(400)
+          .json({ error: "Receiver is not an active team member" });
+      }
+
+      const [leaderCheck] = await db
+        .select()
+        .from(teams)
+        .where(and(eq(teams.id, teamId), eq(teams.leaderId, user.id)));
+
+      if (!leaderCheck) {
+        return res
+          .status(403)
+          .json({ error: "Only the team leader can request a transfer" });
+      }
+
+      const existingRequest = await db
+        .select()
+        .from(teamLeaderTransfers)
+        .where(
+          and(
+            eq(teamLeaderTransfers.teamId, teamId),
+            isNull(teamLeaderTransfers.respondedAt),
+          ),
+        );
+
+      if (existingRequest.length > 0) {
+        return res.status(409).json({
+          error: "There is already a pending leadership transfer request",
+        });
+      }
+
+      await db.insert(teamLeaderTransfers).values({
+        teamId,
+        fromUserId: user.id,
+        toUserId: receiverId,
+        reason,
+      });
+
+      return res
+        .status(200)
+        .json({ message: "Leadership transfer request submitted" });
+    } catch (e) {
+      console.error("Error requesting leadership transfer:", e);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  },
+);
+
+export const teamLeadershipTransferResponse = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = req.user;
+    const { transferRequestId, status } = req.body;
+
+    if (!transferRequestId) {
+      return res.status(400).json({ error: "Transfer request ID is required" });
+    }
+
+    const validStatuses = ["accepted", "rejected", "cancelled"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: "Invalid status provided" });
+    }
+
+    try {
+      const [transferRequest] = await db
+        .select()
+        .from(teamLeaderTransfers)
+        .where(eq(teamLeaderTransfers.id, transferRequestId));
+
+      if (!transferRequest) {
+        return res.status(404).json({ error: "Transfer request not found" });
+      }
+
+      const isRequester = user.id === transferRequest.fromUserId;
+      const isReceiver = user.id === transferRequest.toUserId;
+
+      if (transferRequest.status !== "pending" || transferRequest.respondedAt) {
+        return res
+          .status(400)
+          .json({ error: "Transfer request has already been responded to" });
+      }
+
+      if (status === "cancelled") {
+        if (!isRequester) {
+          return res
+            .status(403)
+            .json({ error: "Only the team leader can cancel the request" });
+        }
+
+        await db
+          .update(teamLeaderTransfers)
+          .set({ status: "cancelled", respondedAt: new Date() })
+          .where(eq(teamLeaderTransfers.id, transferRequestId));
+
+        return res
+          .status(200)
+          .json({ message: "Leadership transfer request was cancelled" });
+      }
+
+      if (!isReceiver) {
+        return res.status(403).json({
+          error: "Only the requested receiver can respond to this transfer",
+        });
+      }
+
+      if (status === "accepted") {
+        await db
+          .update(teams)
+          .set({ leaderId: user.id })
+          .where(eq(teams.id, transferRequest.teamId));
+      }
+
+      await db
+        .update(teamLeaderTransfers)
+        .set({ status, respondedAt: new Date() })
+        .where(eq(teamLeaderTransfers.id, transferRequestId));
+
+      return res
+        .status(200)
+        .json({ message: `Leadership transfer request was ${status}` });
+    } catch (e) {
+      console.error("Error responding to leadership transfer request:", e);
+      return res
+        .status(500)
+        .json({ error: "Error responding to leadership transfer request" });
+    }
+  },
+);
+
+export const getPendingTeamLeadershipTransferRequests = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = req.user;
+
+    // Create aliases for user table
+    const fromUser = alias(users, "fromUser");
+    const toUser = alias(users, "toUser");
+
+    try {
+      const requests = await db
+        .select({
+          id: teamLeaderTransfers.id,
+          teamId: teamLeaderTransfers.teamId,
+          fromUserId: teamLeaderTransfers.fromUserId,
+          toUserId: teamLeaderTransfers.toUserId,
+          status: teamLeaderTransfers.status,
+          reason: teamLeaderTransfers.reason,
+          createdAt: teamLeaderTransfers.createdAt,
+          respondedAt: teamLeaderTransfers.respondedAt,
+          fromUserName: fromUser.name,
+          toUserName: toUser.name,
+        })
+        .from(teamLeaderTransfers)
+        .leftJoin(fromUser, eq(fromUser.id, teamLeaderTransfers.fromUserId))
+        .leftJoin(toUser, eq(toUser.id, teamLeaderTransfers.toUserId))
+        .where(
+          and(
+            eq(teamLeaderTransfers.status, "pending"),
+            or(
+              eq(teamLeaderTransfers.fromUserId, user.id),
+              eq(teamLeaderTransfers.toUserId, user.id),
+            ),
+          ),
+        );
+
+      return res.status(200).json({ requests });
+    } catch (e) {
+      console.error("Error fetching pending leadership transfer requests:", e);
+      return res
+        .status(500)
+        .json({ error: "Failed to fetch transfer requests" });
     }
   },
 );

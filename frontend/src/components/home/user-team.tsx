@@ -12,6 +12,7 @@ import { NoticeBoard } from "./notice-board";
 import { TeamNotFound } from "./team-notfound";
 import { PendingRequests } from "./pending-requests";
 import { DisbandTeamModal } from "./disband-team";
+import { PendingTransferRequests } from "./pending-transfer";
 
 export const UserTeam = () => {
   const { user } = useSessionStore();
@@ -84,15 +85,17 @@ export const UserTeam = () => {
           <NoticeBoard />
         </div>
       </div>
-
-      {isLeader && (
-        <aside className="w-full lg:w-[320px] space-y-4">
-          <div className="bg-muted/20 rounded-md p-4">
-            <h2 className="text-lg font-semibold mb-3">Join Requests</h2>
-            <PendingRequests teamId={team.teamId} />
-          </div>
-        </aside>
-      )}
+      <div className="flex flex-col gap-4">
+        <PendingTransferRequests leaderId={team.leaderId} teamId={team.id} />
+        {isLeader && (
+          <aside className="w-full lg:w-[320px] space-y-4">
+            <div className="bg-muted/20 rounded-md p-4">
+              <h2 className="text-lg font-semibold mb-3">Join Requests</h2>
+              <PendingRequests teamId={team.teamId} />
+            </div>
+          </aside>
+        )}
+      </div>
     </section>
   );
 };
