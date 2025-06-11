@@ -12,6 +12,8 @@ import {
 } from "../db/schema";
 import { and, eq, isNull } from "drizzle-orm";
 
+import { count, eq, isNull, and } from "drizzle-orm";
+
 export const getAllTeams = asyncHandler(async (req: Request, res: Response) => {
   const cohortId = req.query.cohortId as string;
 
@@ -20,18 +22,30 @@ export const getAllTeams = asyncHandler(async (req: Request, res: Response) => {
   }
 
   try {
-    const teamsInCohort = await db
-      .select()
+    const teamsWithCount = await db
+      .select({
+        id: teams.id,
+        name: teams.name,
+        description: teams.description,
+        cohortId: teams.cohortId,
+        isPublished: teams.isPublished,
+        createdAt: teams.createdAt,
+        disbandedAt: teams.disbandedAt,
+        memberCount: count().as("memberCount"),
+      })
       .from(teams)
+      .leftJoin(teamMemberships, eq(teams.id, teamMemberships.teamId))
       .where(
         and(
           eq(teams.cohortId, cohortId),
           eq(teams.isPublished, true),
           isNull(teams.disbandedAt),
+          isNull(teamMemberships.leftAt),
         ),
-      );
+      )
+      .groupBy(teams.id);
 
-    return res.status(200).json(teamsInCohort);
+    return res.status(200).json(teamsWithCount);
   } catch (e) {
     console.error(e);
     return res.status(500).json({ error: "Failed to retrieve teams" });

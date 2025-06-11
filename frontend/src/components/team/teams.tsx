@@ -23,13 +23,19 @@ export const Teams = () => {
             key={team.id}
             className="flex flex-col h-full shadow-sm transition-transform hover:scale-[1.03] cursor-pointer"
           >
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-1">
               <CardTitle className="truncate">{team.name}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1">
-              <p className="text-sm line-clamp-3">
-                {team?.description || "No description provided."}
+              <p className="text-xs text-muted-foreground">
+                {team.memberCount} member{team.memberCount !== 1 ? "s" : ""}
               </p>
+            </CardHeader>
+            <CardContent className="flex-1 space-y-2">
+              <p className="text-sm line-clamp-3">
+                {team.description || "No description provided."}
+              </p>
+              <div className="text-xs text-muted-foreground">
+                {team.isPublished ? "🌐 Public" : "🔒 Private"}
+              </div>
             </CardContent>
           </Card>
         ))}

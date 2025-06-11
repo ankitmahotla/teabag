@@ -13,4 +13,5 @@ export type TEAM = {
   isPublished: boolean;
   createdAt: Date;
   disbandedAt: Date | null;
+  memberCount: number;
 };
