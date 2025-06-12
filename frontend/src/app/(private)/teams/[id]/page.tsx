@@ -2,12 +2,12 @@
 
 import { Suspense } from "react";
 import { Spinner } from "@/components/spinner";
-import { TeamsCatalog } from "@/components/team/teams-catalog";
+import { Team } from "@/components/team/team";
 
 export default function Page() {
   return (
     <Suspense fallback={<Spinner />}>
-      <TeamsCatalog />
+      <Team />
     </Suspense>
   );
 }

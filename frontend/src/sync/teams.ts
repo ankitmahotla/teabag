@@ -18,25 +18,21 @@ import {
   GET_TEAM_REQUEST_STATUS,
   GET_USER_TEAM_BY_COHORT,
 } from "@/api/query";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { queryClient } from "./client";
 
 export const useGetCohortTeamsSync = (cohortId: string) => {
-  const isEnabled = Boolean(cohortId);
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: ["teams", cohortId],
     queryFn: () => GET_COHORT_TEAMS(cohortId),
-    enabled: isEnabled,
   });
 };
 
 export const useGetTeamByIdSync = (teamId: string) => {
-  const isEnabled = Boolean(teamId);
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: ["team", teamId],
     queryFn: () => GET_TEAM_BY_ID(teamId),
-    enabled: isEnabled,
   });
 };
 
