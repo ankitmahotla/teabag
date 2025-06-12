@@ -113,16 +113,21 @@ export const TEAM_LEADERSHIP_TRANSFER_REQUEST = async ({
 };
 
 export const TEAM_LEADERSHIP_TRANSFER_RESPONSE = async ({
+  teamId,
   transferRequestId,
   status,
 }: {
+  teamId: string;
   transferRequestId: string;
   status: "accepted" | "rejected" | "cancelled";
 }) => {
-  const response = await API.post("/api/teams/leadership-transfer/respond", {
-    transferRequestId,
-    status,
-  });
+  const response = await API.post(
+    `/api/teams/${teamId}/leadership-transfer/respond`,
+    {
+      transferRequestId,
+      status,
+    },
+  );
 
   return response.data;
 };

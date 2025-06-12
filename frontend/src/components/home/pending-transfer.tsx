@@ -60,6 +60,7 @@ export const PendingTransferRequests = ({
                         variant="default"
                         onClick={() =>
                           respondToTransfer({
+                            teamId,
                             transferRequestId: req.id,
                             status: "accepted",
                           })

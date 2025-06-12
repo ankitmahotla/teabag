@@ -159,6 +159,9 @@ export const teamLeaderTransfers = pgTable("team_leader_transfers", {
   teamId: uuid("team_id")
     .notNull()
     .references(() => teams.id, { onDelete: "cascade" }),
+  cohortId: uuid("cohort_id").references(() => cohorts.id, {
+    onDelete: "cascade",
+  }),
   fromUserId: uuid("from_user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),

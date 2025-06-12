@@ -1011,6 +1011,15 @@ export const teamLeadershipTransferResponse = asyncHandler(
           .set({ status: "cancelled", respondedAt: new Date() })
           .where(eq(teamLeaderTransfers.id, transferRequestId));
 
+        await db.insert(userInteractions).values({
+          userId: transferRequest.fromUserId,
+          type: "leadership_transfer_cancelled_by_requester",
+          teamId: transferRequest.teamId,
+          cohortId: transferRequest.cohortId,
+          relatedUserId: transferRequest.toUserId,
+          note: "User cancelled leadership transfer request",
+        });
+
         return res
           .status(200)
           .json({ message: "Leadership transfer request was cancelled" });
@@ -1027,12 +1036,29 @@ export const teamLeadershipTransferResponse = asyncHandler(
           .update(teams)
           .set({ leaderId: user.id })
           .where(eq(teams.id, transferRequest.teamId));
+
+        await db.insert(userInteractions).values({
+          userId: transferRequest.toUserId,
+          type: "promoted_to_leader",
+          teamId: transferRequest.teamId,
+          cohortId: transferRequest.cohortId,
+          note: `User was promoted to leader of teamId:${transferRequest.teamId}`,
+        });
       }
 
       await db
         .update(teamLeaderTransfers)
         .set({ status, respondedAt: new Date() })
         .where(eq(teamLeaderTransfers.id, transferRequestId));
+
+      await db.insert(userInteractions).values({
+        userId: transferRequest.toUserId,
+        type: `${status}_leadership_transfer_request`,
+        teamId: transferRequest.teamId,
+        cohortId: transferRequest.cohortId,
+        relatedUserId: transferRequest.fromUserId,
+        note: `User ${transferRequest.status} team leadership request of teamId:${transferRequest.teamId}`,
+      });
 
       return res
         .status(200)
@@ -1050,7 +1076,6 @@ export const getPendingTeamLeadershipTransferRequests = asyncHandler(
   async (req: Request, res: Response) => {
     const user = req.user;
 
-    // Create aliases for user table
     const fromUser = alias(users, "fromUser");
     const toUser = alias(users, "toUser");
 
