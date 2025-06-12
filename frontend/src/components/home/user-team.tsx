@@ -8,11 +8,13 @@ import {
 import { format } from "date-fns";
 import { useSessionStore } from "@/store/session";
 import { TeamMembers } from "./team-members";
-import { NoticeBoard } from "./notice-board";
 import { TeamNotFound } from "./team-notfound";
 import { PendingRequests } from "./pending-requests";
 import { DisbandTeamModal } from "./disband-team";
 import { PendingTransferRequests } from "./pending-transfer";
+import TeamNotices from "./team-notices";
+import { CreateNoticeForm } from "./create-notice";
+import { TeamNoticesList } from "./notice-board";
 
 export const UserTeam = () => {
   const { user } = useSessionStore();
@@ -82,7 +84,10 @@ export const UserTeam = () => {
         </div>
 
         <div className="space-y-4">
-          <NoticeBoard />
+          {isLeader && (
+            <CreateNoticeForm teamId={team.teamId} postedBy={user?.id} />
+          )}
+          <TeamNoticesList teamId={team.teamId} userId={user?.id} />
         </div>
       </div>
       <div className="flex flex-col gap-4">

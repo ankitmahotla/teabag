@@ -60,3 +60,7 @@ export const GET_PENDING_TEAM_LEADERSHIP_TRANSFERS = async () => {
   return (await API.get("/api/teams/leadership-transfer/requests/pending"))
     .data;
 };
+
+export const GET_TEAM_NOTICES = async (teamId: string) => {
+  return (await API.get(`/api/notices/${teamId}`)).data;
+};

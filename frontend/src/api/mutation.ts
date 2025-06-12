@@ -131,3 +131,48 @@ export const TEAM_LEADERSHIP_TRANSFER_RESPONSE = async ({
 
   return response.data;
 };
+
+export const CREATE_TEAM_NOTICE = async ({
+  teamId,
+  message,
+  postedBy,
+}: {
+  teamId: string;
+  message: string;
+  postedBy: string;
+}) => {
+  return (
+    await API.post("/api/notices", {
+      teamId,
+      message,
+      postedBy,
+    })
+  ).data;
+};
+
+export const UPDATE_TEAM_NOTICE = async ({
+  id,
+  message,
+  postedBy,
+}: {
+  id: string;
+  message: string;
+  postedBy: string;
+}) => {
+  return (
+    await API.put(`/api/notices/${id}`, {
+      message,
+      postedBy,
+    })
+  ).data;
+};
+
+export const DELETE_TEAM_NOTICE = async ({
+  id,
+  postedBy,
+}: {
+  id: string;
+  postedBy: string;
+}) => {
+  return (await API.delete(`/api/notices/${id}`, { data: { postedBy } })).data;
+};

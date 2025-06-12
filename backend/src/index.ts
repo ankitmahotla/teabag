@@ -5,6 +5,7 @@ import authRoutes from "./routes/auth.route";
 import adminRoutes from "./routes/admin.route";
 import userRoutes from "./routes/user.route";
 import teamRoutes from "./routes/team.route";
+import noticeRoutes from "./routes/notice.route";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./docs/swagger";
 import type { CorsOptions } from "cors";
@@ -38,6 +39,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/teams", teamRoutes);
+app.use("/api/notices", noticeRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
