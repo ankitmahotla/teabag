@@ -12,7 +12,6 @@ import { TeamNotFound } from "./team-notfound";
 import { PendingRequests } from "./pending-requests";
 import { DisbandTeamModal } from "./disband-team";
 import { PendingTransferRequests } from "./pending-transfer";
-import TeamNotices from "./team-notices";
 import { CreateNoticeForm } from "./create-notice";
 import { TeamNoticesList } from "./notice-board";
 
