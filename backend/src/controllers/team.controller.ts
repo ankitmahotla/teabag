@@ -1042,7 +1042,7 @@ export const teamLeadershipTransferResponse = asyncHandler(
           type: "promoted_to_leader",
           teamId: transferRequest.teamId,
           cohortId: transferRequest.cohortId,
-          note: `User was promoted to leader of teamId:${transferRequest.teamId}`,
+          note: `User was promoted to leader of teamId: ${transferRequest.teamId}`,
         });
       }
 
@@ -1057,7 +1057,7 @@ export const teamLeadershipTransferResponse = asyncHandler(
         teamId: transferRequest.teamId,
         cohortId: transferRequest.cohortId,
         relatedUserId: transferRequest.fromUserId,
-        note: `User ${transferRequest.status} team leadership request of teamId:${transferRequest.teamId}`,
+        note: `User ${status} team leadership request of teamId: ${transferRequest.teamId}`,
       });
 
       return res
