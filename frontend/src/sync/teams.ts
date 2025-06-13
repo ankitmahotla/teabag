@@ -37,11 +37,10 @@ export const useGetTeamByIdSync = (teamId: string) => {
 };
 
 export const useGetUserTeamByCohortSync = (cohortId: string) => {
-  const isEnabled = Boolean(cohortId);
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: ["userTeam", cohortId],
     queryFn: () => GET_USER_TEAM_BY_COHORT(cohortId),
-    enabled: isEnabled,
+    retry: 1,
   });
 };
 

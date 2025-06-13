@@ -808,6 +808,10 @@ export const kickTeamMember = asyncHandler(
       });
 
       await db
+        .delete(teamJoinRequests)
+        .where(eq(teamJoinRequests.userId, teamMemberId));
+
+      await db
         .update(teamMemberships)
         .set({ leftAt: new Date(), leftReason: reason })
         .where(

@@ -100,6 +100,7 @@ export const getUserTeamByCohort = asyncHandler(
         .select({
           teamId: teams.id,
           name: teams.name,
+          description: teams.description,
           leaderId: teams.leaderId,
           isPublished: teams.isPublished,
           createdAt: teams.createdAt,
