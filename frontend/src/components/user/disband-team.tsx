@@ -74,7 +74,9 @@ export const DisbandTeamModal = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive">Disband</Button>
+        <Button className="w-full" variant="destructive">
+          Disband
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

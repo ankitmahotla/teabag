@@ -10,7 +10,7 @@ import {
   userInteractions,
   users,
 } from "../db/schema";
-import { and, desc, eq, isNull, lt, or } from "drizzle-orm";
+import { and, desc, eq, isNull, lt } from "drizzle-orm";
 
 export const getUserById = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -108,6 +108,7 @@ export const getUserTeamByCohort = asyncHandler(
         .innerJoin(teams, eq(teamMemberships.teamId, teams.id))
         .where(
           and(
+            eq(teams.cohortId, cohortId),
             eq(teamMemberships.userId, user.id),
             eq(teams.cohortId, cohortId),
             isNull(teamMemberships.leftAt),

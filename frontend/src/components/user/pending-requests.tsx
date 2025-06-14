@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useGetPendingTeamJoinRequestsSync } from "@/sync/teams";
 import { format } from "date-fns";
 import { RequestActionModal } from "./request-action";
+import { JoinRequest } from "@/types/request";
 
 export const PendingRequests = ({ teamId }: { teamId: string }) => {
   const { data } = useGetPendingTeamJoinRequestsSync(teamId);
@@ -15,7 +16,7 @@ export const PendingRequests = ({ teamId }: { teamId: string }) => {
     <>
       {requests.length > 0 ? (
         <div className="space-y-3">
-          {requests.map((req) => (
+          {requests.map((req: JoinRequest) => (
             <div
               key={req.id}
               className="bg-muted rounded-md p-3 hover:bg-muted/70 transition cursor-pointer"

@@ -2,8 +2,18 @@ import { useTeamNotices } from "@/sync/notice";
 import { Notice } from "@/types/notice";
 import { formatDistanceToNow } from "date-fns";
 import { Bell } from "lucide-react";
+import { DeleteNoticeButton } from "../user/delete-notice";
+import { useSessionStore } from "@/store/session";
+import { UpdateNoticeForm } from "./update-notice";
 
-export const RecentNotices = ({ teamId }: { teamId: string }) => {
+export const RecentNotices = ({
+  teamId,
+  leaderId,
+}: {
+  teamId: string;
+  leaderId?: string;
+}) => {
+  const { user } = useSessionStore();
   const { data } = useTeamNotices(teamId);
   const notices = data || [];
 
@@ -23,12 +33,25 @@ export const RecentNotices = ({ teamId }: { teamId: string }) => {
               <span className="absolute left-2 top-3 w-2 h-2 rounded-full bg-muted-foreground" />
 
               <div className="bg-muted/40 px-3 py-2 rounded-md text-sm text-muted-foreground space-y-1">
-                <p>{notice.message}</p>
-                <p className="text-xs text-muted-foreground opacity-70">
-                  {formatDistanceToNow(new Date(notice.createdAt), {
-                    addSuffix: true,
-                  })}
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p>{notice.message}</p>
+                    <p className="text-xs text-muted-foreground opacity-70">
+                      {formatDistanceToNow(new Date(notice.createdAt), {
+                        addSuffix: true,
+                      })}
+                    </p>
+                  </div>
+                  {leaderId === user?.id && (
+                    <div className="flex gap-2 items-center">
+                      <UpdateNoticeForm notice={notice} />
+                      <DeleteNoticeButton
+                        noticeId={notice.id}
+                        postedBy={notice.postedBy}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))

@@ -25,6 +25,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useGetUserByIdSync } from "@/sync/user";
 import { Skeleton } from "@/components/ui/skeleton";
+import { UserInteraction } from "@/types/user";
+import { TEAM } from "@/types/team";
 
 const kickSchema = z.object({
   reason: z.string().min(1, "A reason is required"),
@@ -41,7 +43,7 @@ export const UserProfile = ({
 }: {
   userId: string;
   readOnly?: boolean;
-  team?: any;
+  team?: TEAM;
   open: boolean;
   setOpen: (open: boolean) => void;
 }) => {
@@ -58,7 +60,8 @@ export const UserProfile = ({
   });
 
   const onSubmit = (data: KickFormValues) => {
-    mutate({ teamId: team.teamId, teamMemberId: userId, reason: data.reason });
+    if (!team) return;
+    mutate({ teamId: team.id, teamMemberId: userId, reason: data.reason });
     form.reset();
     setOpen(false);
   };
@@ -107,19 +110,21 @@ export const UserProfile = ({
               <p className="font-semibold text-sm mb-2">Recent Interactions</p>
               <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
                 {recentInteractions.length > 0 ? (
-                  recentInteractions.map((interaction, index) => (
-                    <div
-                      key={interaction.id || index}
-                      className="border p-2 rounded text-sm"
-                    >
-                      <div className="font-medium">{interaction.type}</div>
-                      {interaction.note && (
-                        <div className="text-muted-foreground">
-                          {interaction.note}
-                        </div>
-                      )}
-                    </div>
-                  ))
+                  recentInteractions.map(
+                    (interaction: UserInteraction, index: number) => (
+                      <div
+                        key={interaction.id || index}
+                        className="border p-2 rounded text-sm"
+                      >
+                        <div className="font-medium">{interaction.type}</div>
+                        {interaction.note && (
+                          <div className="text-muted-foreground">
+                            {interaction.note}
+                          </div>
+                        )}
+                      </div>
+                    ),
+                  )
                 ) : (
                   <p className="text-sm text-muted-foreground">
                     No recent interactions.
@@ -130,7 +135,7 @@ export const UserProfile = ({
           </div>
         )}
 
-        {!readOnly && team.leaderId === user?.id && user?.id !== userId && (
+        {!readOnly && team?.leaderId === user?.id && user?.id !== userId && (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
               <DialogFooter>

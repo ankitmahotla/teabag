@@ -1084,7 +1084,7 @@ export const getPendingTeamLeadershipTransferRequests = asyncHandler(
     const toUser = alias(users, "toUser");
 
     try {
-      const requests = await db
+      const [request] = await db
         .select({
           id: teamLeaderTransfers.id,
           teamId: teamLeaderTransfers.teamId,
@@ -1110,7 +1110,7 @@ export const getPendingTeamLeadershipTransferRequests = asyncHandler(
           ),
         );
 
-      return res.status(200).json({ requests });
+      return res.status(200).json({ request });
     } catch (e) {
       console.error("Error fetching pending leadership transfer requests:", e);
       return res

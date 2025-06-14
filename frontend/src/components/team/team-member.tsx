@@ -2,8 +2,16 @@ import { useGetUserByIdSync } from "@/sync/user";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import { useSessionStore } from "@/store/session";
 
-export const TeamMember = ({ userId }: { userId: string }) => {
+export const TeamMember = ({
+  userId,
+  leaderId,
+}: {
+  userId: string;
+  leaderId?: string;
+}) => {
+  const { user: currentUser } = useSessionStore();
   const { data, isLoading } = useGetUserByIdSync(userId);
 
   if (isLoading || !data?.user) {
@@ -27,7 +35,12 @@ export const TeamMember = ({ userId }: { userId: string }) => {
           <AvatarFallback>{user.name?.[0]}</AvatarFallback>
         </Avatar>
         <div>
-          <p className="font-medium">{user.name}</p>
+          <p className="font-medium">
+            {currentUser?.id === user.id ? "You" : user.name}
+            {leaderId === user.id && (
+              <span className="text-green-500"> (Leader)</span>
+            )}
+          </p>
           <p className="text-sm text-muted-foreground">{user.email}</p>
         </div>
       </div>

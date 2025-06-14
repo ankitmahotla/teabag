@@ -11,7 +11,7 @@ export const CreateNoticeForm = ({
   postedBy: string;
 }) => {
   const [message, setMessage] = useState("");
-  const { mutate: createNotice, isLoading } = useCreateNotice();
+  const { mutate: createNotice, isPending } = useCreateNotice();
 
   const handleSubmit = () => {
     if (!message.trim()) return;
@@ -26,8 +26,8 @@ export const CreateNoticeForm = ({
         value={message}
         onChange={(e) => setMessage(e.target.value)}
       />
-      <Button onClick={handleSubmit} disabled={isLoading}>
-        {isLoading ? "Posting..." : "Post Notice"}
+      <Button onClick={handleSubmit} disabled={isPending}>
+        {isPending ? "Posting..." : "Post Notice"}
       </Button>
     </div>
   );

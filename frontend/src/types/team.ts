@@ -15,3 +15,8 @@ export type TEAM = {
   disbandedAt: Date | null;
   memberCount: number;
 };
+
+export type Member = {
+  membershipId: string;
+  userId: string;
+};

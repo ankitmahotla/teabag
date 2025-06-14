@@ -1,5 +1,3 @@
-"use client";
-
 import { useParams } from "next/navigation";
 import {
   useGetTeamByIdSync,
@@ -8,7 +6,6 @@ import {
   useWithdrawTeamJoiningRequestSync,
 } from "@/sync/teams";
 import { TeamMember } from "./team-member";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useSessionStore } from "@/store/session";
 import useSpaceStore from "@/store/space";
 import { useState } from "react";
@@ -27,11 +24,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Textarea } from "../ui/textarea";
-
-export type Member = {
-  membershipId: string;
-  userId: string;
-};
+import { Member } from "@/types/team";
 
 const joinSchema = z.object({
   note: z.string().min(1, "Note is required"),
@@ -75,8 +68,6 @@ export const Team = () => {
   const handleWithdraw = () => {
     withdrawTeamJoiningRequest(teamId as string);
   };
-
-  if (!team) return <Skeleton className="h-32 w-full" />;
 
   const isMember = team.members.some(
     (member: Member) => member.userId === user?.id,

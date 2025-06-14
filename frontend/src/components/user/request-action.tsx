@@ -9,7 +9,6 @@ import { format } from "date-fns";
 import { Button } from "../ui/button";
 import { useUpdateTeamJoinRequestStatusSync } from "@/sync/teams";
 import { useState } from "react";
-import { UserProfileContent } from "./userprofile-content";
 
 export const RequestActionModal = ({
   request,
@@ -71,9 +70,6 @@ export const RequestActionModal = ({
           >
             {showProfile ? "Hide Interactions" : "View Interactions"}
           </Button>
-
-          {showProfile && <UserProfileContent userId={request.userId} />}
-
           <div className="flex gap-2 ml-auto">
             <Button
               variant="destructive"

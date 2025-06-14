@@ -12,6 +12,8 @@ export const TeamOverview = () => {
   const { data } = useGetUserTeamByCohortSync(spaceId!);
   const userTeam = data?.teamDetails;
 
+  if (!userTeam) return null;
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-10">
       <>
@@ -23,7 +25,7 @@ export const TeamOverview = () => {
                 {userTeam.description}
               </p>
             </div>
-            <Link href={`/teams/${userTeam.teamId}`}>
+            <Link href={`/user/team/${userTeam?.teamId}`}>
               <Button size="sm">Go to Team</Button>
             </Link>
           </CardHeader>
