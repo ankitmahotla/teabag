@@ -43,8 +43,7 @@ export const DisbandTeamModal = ({ teamId }: DisbandTeamDialogProps) => {
     data?.members?.filter((member: Member) => member.userId !== user?.id) ?? [];
 
   const { mutate: disbandTeam } = useDisbandTeamSync(teamId);
-  const { mutate: transferLeadership } =
-    useTeamLeaderShipTransferRequestSync(teamId);
+  const { mutate: transferLeadership } = useTeamLeaderShipTransferRequestSync();
 
   const handleAction = () => {
     if (!reason.trim()) return;

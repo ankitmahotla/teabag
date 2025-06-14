@@ -24,8 +24,7 @@ export const PendingTransferRequests = ({
   if (isLoading)
     return <p className="text-sm text-muted-foreground">Loading...</p>;
 
-  if (!req)
-    return <p className="text-sm text-muted-foreground">No pending requests</p>;
+  if (!req) return null;
 
   const isRecipient = user?.id === req?.toUserId;
   const canCancel = isLeader && user?.id === req.fromUserId;

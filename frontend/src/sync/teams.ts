@@ -164,14 +164,16 @@ export const useKickTeamMemberSync = (teamId: string) => {
   });
 };
 
-export const useTeamLeaderShipTransferRequestSync = (teamId: string) => {
+export const useTeamLeaderShipTransferRequestSync = () => {
   return useMutation({
     mutationFn: TEAM_LEADERSHIP_TRANSFER_REQUEST,
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["teamMembers", teamId] });
-    },
     onSuccess: () => {
       toast.success("Team leader transfer request sent successfully");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["pendingLeadershipTransfers"],
+      });
     },
   });
 };

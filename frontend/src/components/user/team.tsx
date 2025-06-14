@@ -50,36 +50,38 @@ export const Team = () => {
             <RecentNotices teamId={team.id} leaderId={team.leaderId} />
           </section>
         </div>
-        {isLeader && (
-          <aside className="w-full lg:w-[320px] space-y-8">
-            <div className="space-y-3">
-              <h2 className="text-lg font-semibold">Team Controls</h2>
-              <Button
-                onClick={handlePublish}
-                variant={isPublished ? "outline" : "default"}
-                className="w-full"
-              >
-                {isPublished ? "Unpublish Team" : "Publish Team"}
-              </Button>
-              {spaceId && <DisbandTeamModal teamId={team.teamId} />}
+
+        <aside className="w-full lg:w-[320px] space-y-8">
+          <div className="space-y-4 pb-6">
+            <PendingTransferRequests
+              leaderId={team.leaderId}
+              teamId={team.id}
+            />
+          </div>
+          {isLeader && (
+            <div className="space-y-8">
+              <div className="space-y-3">
+                <h2 className="text-lg font-semibold">Team Controls</h2>
+                <Button
+                  onClick={handlePublish}
+                  variant={isPublished ? "outline" : "default"}
+                  className="w-full"
+                >
+                  {isPublished ? "Unpublish Team" : "Publish Team"}
+                </Button>
+                {spaceId && <DisbandTeamModal teamId={teamId as string} />}
+              </div>
+              <div className="space-y-4 border-t pt-6">
+                <h2 className="text-lg font-semibold">Join Requests</h2>
+                <PendingRequests teamId={team.id} />
+              </div>
+              <div className="space-y-4 border-t pt-6">
+                <h2 className="text-lg font-semibold">Post a Notice</h2>
+                <CreateNoticeForm teamId={team.id} postedBy={team.leaderId} />
+              </div>
             </div>
-            <div className="space-y-4 border-t pt-6">
-              <h2 className="text-lg font-semibold">Post a Notice</h2>
-              <CreateNoticeForm teamId={team.id} postedBy={team.leaderId} />
-            </div>
-            <div className="space-y-4 border-t pt-6">
-              <h2 className="text-lg font-semibold">Leadership Transfers</h2>
-              <PendingTransferRequests
-                leaderId={team.leaderId}
-                teamId={team.id}
-              />
-            </div>
-            <div className="space-y-4 border-t pt-6">
-              <h2 className="text-lg font-semibold">Join Requests</h2>
-              <PendingRequests teamId={team.id} />
-            </div>
-          </aside>
-        )}
+          )}
+        </aside>
       </div>
     </div>
   );
