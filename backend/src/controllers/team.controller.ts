@@ -366,7 +366,7 @@ export const requestToJoinTeam = asyncHandler(
             type: "requested_join",
             teamId,
             cohortId,
-            note,
+            note: `User requested to join team ${team.name}`,
           });
 
           return res
@@ -661,7 +661,7 @@ export const updateTeamJoinRequestStatus = asyncHandler(
             userId: request.userId,
             type: "joined_team",
             teamId,
-            note: "User joined team after request was accepted",
+            note: `User joined a team`,
           });
         }
       }
@@ -671,7 +671,7 @@ export const updateTeamJoinRequestStatus = asyncHandler(
         relatedUserId: user.id,
         type: status === "accepted" ? "accepted_request" : "rejected_request",
         teamId,
-        note: `Request ${status} by leader`,
+        note: `Team join request ${status} by leader`,
       });
 
       return res.status(200).json({ request });

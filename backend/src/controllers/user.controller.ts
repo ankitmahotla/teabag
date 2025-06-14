@@ -10,7 +10,7 @@ import {
   userInteractions,
   users,
 } from "../db/schema";
-import { and, desc, eq, isNull, or } from "drizzle-orm";
+import { and, desc, eq, isNull, lt, or } from "drizzle-orm";
 
 export const getUserById = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -26,27 +26,26 @@ export const getUserById = asyncHandler(async (req: Request, res: Response) => {
         email: users.email,
         name: users.name,
         role: users.role,
+        teamId: teamMemberships.teamId,
+        teamName: teams.name,
+        teamLeaderId: teams.leaderId,
       })
       .from(users)
-      .where(eq(users.id, id));
+      .innerJoin(teamMemberships, eq(teamMemberships.userId, users.id))
+      .innerJoin(teams, eq(teams.id, teamMemberships.teamId))
+      .where(
+        and(
+          eq(users.id, id),
+          isNull(teamMemberships.leftAt),
+          isNull(teams.disbandedAt),
+        ),
+      );
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const interactions = await db
-      .select()
-      .from(userInteractions)
-      .where(
-        or(
-          eq(userInteractions.userId, user.id),
-          eq(userInteractions.relatedUserId, user.id),
-        ),
-      )
-      .orderBy(desc(userInteractions.createdAt))
-      .limit(20);
-
-    return res.status(200).json({ user, interactions });
+    return res.status(200).json({ user });
   } catch (e) {
     console.error(e);
     return res.status(500).json({ error: "Internal Server Error" });
@@ -178,6 +177,45 @@ export const getAllUserTeamJoiningRequestsByCohort = asyncHandler(
       return res
         .status(500)
         .json({ error: "Error fetching team joining requests for user" });
+    }
+  },
+);
+
+export const getUserInteractions = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const cursor = req.query.cursor as string | undefined;
+
+    if (!id) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+
+    try {
+      const conditions = [eq(userInteractions.userId, id)];
+      if (cursor) {
+        conditions.push(lt(userInteractions.createdAt, new Date(cursor)));
+      }
+
+      const results = await db
+        .select()
+        .from(userInteractions)
+        .where(and(...conditions))
+        .orderBy(desc(userInteractions.createdAt))
+        .limit(limit + 1);
+
+      const hasMore = results.length > limit;
+      const data = hasMore ? results.slice(0, -1) : results;
+      const lastItem = data[data.length - 1];
+      const nextCursor =
+        hasMore && lastItem?.createdAt
+          ? new Date(lastItem.createdAt).toISOString()
+          : null;
+
+      return res.status(200).json({ data, nextCursor });
+    } catch (e) {
+      console.error(e);
+      return res.status(500).json({ error: "Failed to fetch interactions" });
     }
   },
 );

@@ -1,3 +1,4 @@
+import { PaginatedInteractionsResponse } from "@/types/user";
 import { API } from "./client";
 
 export const GET_USER_COHORTS = async (userId?: string) => {
@@ -63,4 +64,17 @@ export const GET_PENDING_TEAM_LEADERSHIP_TRANSFERS = async () => {
 
 export const GET_TEAM_NOTICES = async (teamId: string) => {
   return (await API.get(`/api/notices/${teamId}`)).data;
+};
+
+export const GET_USER_INTERACTIONS = async (
+  userId: string,
+  cursor?: string,
+  limit = 10,
+): Promise<PaginatedInteractionsResponse> => {
+  const params = new URLSearchParams();
+  if (cursor) params.append("cursor", cursor);
+  params.append("limit", limit.toString());
+
+  const res = await API.get(`/api/user/${userId}/interactions?${params}`);
+  return res.data;
 };

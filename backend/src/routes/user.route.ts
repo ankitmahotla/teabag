@@ -4,6 +4,7 @@ import {
   getAllUserTeamJoiningRequestsByCohort,
   getUserById,
   getUserCohorts,
+  getUserInteractions,
   getUserTeamByCohort,
 } from "../controllers/user.controller";
 
@@ -13,6 +14,7 @@ router.use(authenticate);
 
 router.get("/cohorts", getUserCohorts);
 router.get("/:id", getUserById);
+router.get("/:id/interactions", getUserInteractions);
 router.get("/team/:cohortId", getUserTeamByCohort);
 router.get("/requests/:cohortId", getAllUserTeamJoiningRequestsByCohort);
 
