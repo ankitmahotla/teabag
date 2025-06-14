@@ -120,28 +120,14 @@ export const useUpdateTeamJoinRequestStatusSync = (teamId: string) => {
   });
 };
 
-export const useCreateTeamSync = (cohortId: string) => {
+export const useCreateTeamSync = () => {
   return useMutation({
     mutationFn: CREATE_TEAM,
-    onMutate: async (newTeam) => {
-      await queryClient.cancelQueries({ queryKey: ["userTeam", cohortId] });
-      const previousUserTeam = queryClient.getQueryData(["userTeam", cohortId]);
-      queryClient.setQueryData(["userTeam", cohortId], newTeam);
-      return { previousUserTeam };
-    },
-    onError: (err, newTeam, context) => {
+    onError: (err) => {
       console.error(err);
-      queryClient.setQueryData(
-        ["userTeam", cohortId],
-        context?.previousUserTeam,
-      );
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["userTeam", cohortId] });
     },
     onSuccess: () => {
       toast.success("Team created successfully");
-      queryClient.invalidateQueries({ queryKey: ["teams", "team"] });
     },
   });
 };

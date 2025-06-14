@@ -25,7 +25,7 @@ const formSchema = z.object({
 
 export const CreateTeam = () => {
   const { spaceId } = useSpaceStore();
-  const { mutate } = useCreateTeamSync(spaceId!);
+  const { mutate } = useCreateTeamSync();
   const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
