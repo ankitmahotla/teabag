@@ -49,6 +49,8 @@ export const useTogglePublishTeamSync = (teamId: string) => {
     mutationFn: TOGGLE_PUBLISH_TEAM,
     onSuccess: () => {
       toast.success("Team published successfully");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["team", teamId] });
     },
     onError: (error) => {
@@ -57,7 +59,7 @@ export const useTogglePublishTeamSync = (teamId: string) => {
   });
 };
 
-export const useRequestToJoinTeamSync = () => {
+export const useRequestToJoinTeamSync = (teamId: string) => {
   return useMutation({
     mutationFn: REQUEST_TEAM_JOIN,
     onSuccess: () => {
@@ -65,6 +67,9 @@ export const useRequestToJoinTeamSync = () => {
     },
     onError: (error) => {
       console.error(error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["team", teamId] });
     },
   });
 };
@@ -99,7 +104,7 @@ export const useGetPendingTeamJoinRequestsSync = (teamId: string) => {
   });
 };
 
-export const useUpdateTeamJoinRequestStatusSync = () => {
+export const useUpdateTeamJoinRequestStatusSync = (teamId: string) => {
   return useMutation({
     mutationFn: UPDATE_TEAM_JOIN_REQUEST_STATUS,
     onSuccess: () => {
@@ -107,7 +112,7 @@ export const useUpdateTeamJoinRequestStatusSync = () => {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["pendingRequests"] });
-      queryClient.invalidateQueries({ queryKey: ["teamMembers"] });
+      queryClient.invalidateQueries({ queryKey: ["team", teamId] });
     },
     onError: (error) => {
       console.error(error);
@@ -141,24 +146,11 @@ export const useCreateTeamSync = (cohortId: string) => {
   });
 };
 
-export const useDisbandTeamSync = (cohortId: string) => {
+export const useDisbandTeamSync = (teamId: string) => {
   return useMutation({
     mutationFn: DISBAND_TEAM,
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["userTeam", cohortId] });
-      const previousUserTeam = queryClient.getQueryData(["userTeam", cohortId]);
-      queryClient.setQueryData(["userTeam", cohortId], null);
-      return { previousUserTeam };
-    },
-    onError: (err, newTeam, context) => {
-      console.error(err);
-      queryClient.setQueryData(
-        ["userTeam", cohortId],
-        context?.previousUserTeam,
-      );
-    },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["userTeam", cohortId] });
+      queryClient.invalidateQueries({ queryKey: ["team", teamId] });
     },
     onSuccess: () => {
       toast.success("Team disbanded successfully");
@@ -203,13 +195,15 @@ export const useTeamLeadershipTransferResponse = (teamId: string) => {
     mutationFn: TEAM_LEADERSHIP_TRANSFER_RESPONSE,
     onSuccess: (_, variables) => {
       toast.success(`Leadership transfer ${variables.status}`);
-      queryClient.invalidateQueries({ queryKey: ["teamMembers", teamId] });
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: ["teamLeadershipTransfers", teamId],
       });
       queryClient.invalidateQueries({
         queryKey: ["pendingLeadershipTransfers"],
       });
+      queryClient.invalidateQueries({ queryKey: ["team", teamId] });
     },
   });
 };

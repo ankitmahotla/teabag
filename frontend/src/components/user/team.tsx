@@ -61,9 +61,7 @@ export const Team = () => {
               >
                 {isPublished ? "Unpublish Team" : "Publish Team"}
               </Button>
-              {spaceId && (
-                <DisbandTeamModal teamId={team.teamId} cohortId={spaceId} />
-              )}
+              {spaceId && <DisbandTeamModal teamId={team.teamId} />}
             </div>
             <div className="space-y-4 border-t pt-6">
               <h2 className="text-lg font-semibold">Post a Notice</h2>

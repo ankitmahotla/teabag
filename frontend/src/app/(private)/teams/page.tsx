@@ -8,7 +8,7 @@ import { ErrorBoundary } from "react-error-boundary";
 export default function Page() {
   return (
     <Suspense fallback={<Spinner />}>
-      <ErrorBoundary fallback={<div>Error fetching teams</div>}>
+      <ErrorBoundary fallback={<div>No teams found</div>}>
         <TeamsCatalog />
       </ErrorBoundary>
     </Suspense>

@@ -35,8 +35,12 @@ export const Team = () => {
   const { spaceId } = useSpaceStore();
   const { id: teamId } = useParams();
   const { data: team } = useGetTeamByIdSync(teamId as string);
-  const { data: requestStatus } = useGetTeamRequestStatusSync(teamId as string);
-  const { mutate: requestToJoinTeam } = useRequestToJoinTeamSync();
+  const { data: requestStatus, refetch } = useGetTeamRequestStatusSync(
+    teamId as string,
+  );
+  const { mutate: requestToJoinTeam } = useRequestToJoinTeamSync(
+    teamId as string,
+  );
   const { mutate: withdrawTeamJoiningRequest } =
     useWithdrawTeamJoiningRequestSync();
 
@@ -55,6 +59,9 @@ export const Team = () => {
       note: values.note,
       cohortId: spaceId!,
     });
+    setShowNoteInput(false);
+    form.reset();
+    refetch();
   };
 
   const handleJoin = () => {
@@ -120,9 +127,14 @@ export const Team = () => {
                 Withdraw Request
               </Button>
             ) : (
-              <Button variant="outline" disabled>
-                Join Request Sent
-              </Button>
+              <>
+                <Button variant="outline" disabled>
+                  Join Request Sent
+                </Button>
+                <p className="text-xs text-slate-300 mt-2">
+                  * User can withdraw request after 24 hours
+                </p>
+              </>
             )
           ) : (
             <Button variant="default" size="sm" onClick={handleJoin}>

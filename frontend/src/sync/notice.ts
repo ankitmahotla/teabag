@@ -15,17 +15,19 @@ export const useTeamNotices = (teamId: string) => {
   });
 };
 
-export const useCreateNotice = () => {
+export const useCreateNotice = (teamId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: CREATE_TEAM_NOTICE,
-    onSuccess: (_, { teamId }) => {
-      queryClient.invalidateQueries({ queryKey: ["team-notices", teamId] });
+    onSuccess: () => {
       toast.success("Notice created");
     },
     onError: () => {
       toast.error("Failed to create notice");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["team-notices", teamId] });
     },
   });
 };
@@ -35,12 +37,14 @@ export const useUpdateNotice = () => {
 
   return useMutation({
     mutationFn: UPDATE_TEAM_NOTICE,
-    onSuccess: (_, { id, postedBy }) => {
-      queryClient.invalidateQueries({ queryKey: ["team-notices"] });
+    onSuccess: () => {
       toast.success("Notice updated");
     },
     onError: () => {
       toast.error("Failed to update notice");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["team-notices"] });
     },
   });
 };
@@ -50,12 +54,14 @@ export const useDeleteNotice = () => {
 
   return useMutation({
     mutationFn: DELETE_TEAM_NOTICE,
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ["team-notices"] });
+    onSuccess: () => {
       toast.success("Notice deleted");
     },
     onError: () => {
       toast.error("Failed to delete notice");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["team-notices"] });
     },
   });
 };

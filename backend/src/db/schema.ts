@@ -81,6 +81,9 @@ export const teamMemberships = pgTable(
     teamId: uuid("team_id")
       .notNull()
       .references(() => teams.id, { onDelete: "cascade" }),
+    cohortId: uuid("cohort_id")
+      .notNull()
+      .references(() => cohorts.id, { onDelete: "cascade" }),
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),

@@ -11,7 +11,7 @@ export const CreateNoticeForm = ({
   postedBy: string;
 }) => {
   const [message, setMessage] = useState("");
-  const { mutate: createNotice, isPending } = useCreateNotice();
+  const { mutate: createNotice, isPending } = useCreateNotice(teamId);
 
   const handleSubmit = () => {
     if (!message.trim()) return;

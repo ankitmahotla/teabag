@@ -20,30 +20,45 @@ export const getUserById = asyncHandler(async (req: Request, res: Response) => {
   }
 
   try {
-    const [user] = await db
+    const [userDetail] = await db
       .select({
         id: users.id,
         email: users.email,
         name: users.name,
         role: users.role,
+      })
+      .from(users)
+      .where(eq(users.id, id));
+
+    if (!userDetail) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const [userTeam] = await db
+      .select({
         teamId: teamMemberships.teamId,
         teamName: teams.name,
         teamLeaderId: teams.leaderId,
       })
-      .from(users)
-      .innerJoin(teamMemberships, eq(teamMemberships.userId, users.id))
+      .from(teamMemberships)
       .innerJoin(teams, eq(teams.id, teamMemberships.teamId))
       .where(
         and(
-          eq(users.id, id),
+          eq(teamMemberships.userId, id),
           isNull(teamMemberships.leftAt),
           isNull(teams.disbandedAt),
         ),
       );
 
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    const user = {
+      id: userDetail.id,
+      email: userDetail.email,
+      name: userDetail.name,
+      role: userDetail.role,
+      teamId: userTeam ? userTeam.teamId : null,
+      teamName: userTeam ? userTeam.teamName : null,
+      leaderId: userTeam ? userTeam.teamLeaderId : null,
+    };
 
     return res.status(200).json({ user });
   } catch (e) {

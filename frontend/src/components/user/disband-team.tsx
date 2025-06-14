@@ -25,16 +25,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSessionStore } from "@/store/session";
+import { Member } from "@/types/team";
 
 interface DisbandTeamDialogProps {
   teamId: string;
-  cohortId: string;
 }
 
-export const DisbandTeamModal = ({
-  teamId,
-  cohortId,
-}: DisbandTeamDialogProps) => {
+export const DisbandTeamModal = ({ teamId }: DisbandTeamDialogProps) => {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [action, setAction] = useState<"disband" | "transfer">("disband");
@@ -43,9 +40,9 @@ export const DisbandTeamModal = ({
   const { user } = useSessionStore();
   const { data } = useGetTeamMembersSync(teamId);
   const teamMembers =
-    data?.members?.filter((member) => member.userId !== user?.id) ?? [];
+    data?.members?.filter((member: Member) => member.userId !== user?.id) ?? [];
 
-  const { mutate: disbandTeam } = useDisbandTeamSync(cohortId);
+  const { mutate: disbandTeam } = useDisbandTeamSync(teamId);
   const { mutate: transferLeadership } =
     useTeamLeaderShipTransferRequestSync(teamId);
 
@@ -112,7 +109,7 @@ export const DisbandTeamModal = ({
                 <SelectValue placeholder="Select a member" />
               </SelectTrigger>
               <SelectContent>
-                {teamMembers.map((member) => (
+                {teamMembers.map((member: Member) => (
                   <SelectItem key={member.userId} value={member.userId}>
                     {member?.name ?? member.userId}
                   </SelectItem>

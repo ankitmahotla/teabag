@@ -18,5 +18,6 @@ export type TEAM = {
 
 export type Member = {
   membershipId: string;
+  name: string;
   userId: string;
 };

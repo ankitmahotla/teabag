@@ -8,7 +8,7 @@ import {
 import { format } from "date-fns";
 import { Button } from "../ui/button";
 import { useUpdateTeamJoinRequestStatusSync } from "@/sync/teams";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export const RequestActionModal = ({
   request,
@@ -26,8 +26,8 @@ export const RequestActionModal = ({
   };
   onClose: () => void;
 }) => {
-  const { mutate } = useUpdateTeamJoinRequestStatusSync();
-  const [showProfile, setShowProfile] = useState(false);
+  const { mutate } = useUpdateTeamJoinRequestStatusSync(request.teamId);
+  const router = useRouter();
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -66,9 +66,11 @@ export const RequestActionModal = ({
         <div className="mt-6 flex flex-wrap justify-between items-center gap-3">
           <Button
             variant="outline"
-            onClick={() => setShowProfile((prev) => !prev)}
+            onClick={() => {
+              router.push(`/user/${request.userId}`);
+            }}
           >
-            {showProfile ? "Hide Interactions" : "View Interactions"}
+            View User Profile
           </Button>
           <div className="flex gap-2 ml-auto">
             <Button

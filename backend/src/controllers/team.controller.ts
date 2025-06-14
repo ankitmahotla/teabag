@@ -11,7 +11,7 @@ import {
   userInteractions,
   users,
 } from "../db/schema";
-import { and, eq, isNull, count, or } from "drizzle-orm";
+import { and, eq, isNull, count, or, isNotNull } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 export const getAllTeams = asyncHandler(async (req: Request, res: Response) => {
@@ -168,6 +168,7 @@ export const createTeam = asyncHandler(async (req: Request, res: Response) => {
     await db.insert(teamMemberships).values({
       userId: user.id,
       teamId: newTeam.id,
+      cohortId,
     });
 
     await db.insert(userInteractions).values({
@@ -258,6 +259,7 @@ export const requestToJoinTeam = asyncHandler(
           and(
             eq(teamMemberships.teamId, teamId),
             eq(teamMemberships.userId, user.id),
+            isNull(teamMemberships.leftAt),
           ),
         );
 
@@ -591,52 +593,63 @@ export const updateTeamJoinRequestStatus = asyncHandler(
     }
 
     try {
-      const team = await db
-        .select()
+      const [team] = await db
+        .select({
+          id: teams.id,
+          cohortId: teams.cohortId,
+          leaderId: teams.leaderId,
+        })
         .from(teams)
         .where(and(eq(teams.id, teamId), eq(teams.leaderId, user.id)))
         .limit(1);
 
-      if (!team.length) {
+      if (!team) {
         return res
           .status(403)
           .json({ error: "Not authorized to update this request" });
       }
 
-      const updatedRequest = await db
-        .update(teamJoinRequests)
-        .set({ status })
+      const [originalRequest] = await db
+        .select({
+          id: teamJoinRequests.id,
+          userId: teamJoinRequests.userId,
+        })
+        .from(teamJoinRequests)
         .where(
           and(
             eq(teamJoinRequests.teamId, teamId),
             eq(teamJoinRequests.id, requestId),
           ),
         )
-        .returning({
-          id: teamJoinRequests.id,
-          userId: teamJoinRequests.userId,
-          status: teamJoinRequests.status,
-        });
+        .limit(1);
 
-      const request = updatedRequest[0];
-
-      if (!request) {
-        return res.status(404).json({ error: "Request not found" });
+      if (!originalRequest) {
+        return res.status(404).json({ error: "Join request not found" });
       }
 
-      if (request?.status === "accepted") {
-        const existingMembership = await db
-          .select()
-          .from(teamMemberships)
-          .where(
-            and(
-              eq(teamMemberships.userId, request.userId),
-              eq(teamMemberships.teamId, teamId),
-            ),
-          );
+      const { userId } = originalRequest;
 
-        if (existingMembership.length === 0) {
-          const activeMembers = await db
+      const result = await db.transaction(async (tx) => {
+        if (status === "accepted") {
+          const [activeMembership] = await tx
+            .select()
+            .from(teamMemberships)
+            .where(
+              and(
+                eq(teamMemberships.userId, userId),
+                eq(teamMemberships.cohortId, team.cohortId),
+                isNull(teamMemberships.leftAt),
+              ),
+            )
+            .limit(1);
+
+          if (activeMembership) {
+            throw new Error(
+              "Cannot accept request — user is already in a team",
+            );
+          }
+
+          const members = await tx
             .select()
             .from(teamMemberships)
             .where(
@@ -646,38 +659,65 @@ export const updateTeamJoinRequestStatus = asyncHandler(
               ),
             );
 
-          if (activeMembers.length >= 4 && status === "accepted") {
-            return res.status(400).json({
-              error: "Cannot accept request — team is already full",
-            });
+          if (members.length >= 4) {
+            throw new Error("Cannot accept request — team is already full");
           }
 
-          await db.insert(teamMemberships).values({
+          await tx
+            .delete(teamMemberships)
+            .where(
+              and(
+                eq(teamMemberships.userId, userId),
+                eq(teamMemberships.teamId, teamId),
+                isNotNull(teamMemberships.leftAt),
+              ),
+            );
+
+          await tx.insert(teamMemberships).values({
             teamId,
-            userId: request.userId,
+            userId,
+            cohortId: team.cohortId,
           });
 
-          await db.insert(userInteractions).values({
-            userId: request.userId,
+          await tx.insert(userInteractions).values({
+            userId,
             type: "joined_team",
             teamId,
-            note: `User joined a team`,
+            note: "User joined a team",
           });
         }
-      }
 
-      await db.insert(userInteractions).values({
-        userId: request.userId,
-        relatedUserId: user.id,
-        type: status === "accepted" ? "accepted_request" : "rejected_request",
-        teamId,
-        note: `Team join request ${status} by leader`,
+        const [updatedRequest] = await tx
+          .update(teamJoinRequests)
+          .set({ status })
+          .where(
+            and(
+              eq(teamJoinRequests.teamId, teamId),
+              eq(teamJoinRequests.id, requestId),
+            ),
+          )
+          .returning({
+            id: teamJoinRequests.id,
+            userId: teamJoinRequests.userId,
+            status: teamJoinRequests.status,
+          });
+
+        await tx.insert(userInteractions).values({
+          userId,
+          relatedUserId: user.id,
+          type: status === "accepted" ? "accepted_request" : "rejected_request",
+          teamId,
+          note: `Team join request ${status} by leader`,
+        });
+
+        return updatedRequest;
       });
 
-      return res.status(200).json({ request });
-    } catch (e) {
-      console.error("Error updating join request status:", e);
-      return res.status(500).json({ error: "Failed to update request status" });
+      return res.status(200).json({ request: result });
+    } catch (e: any) {
+      const message = e?.message || "Failed to update join request status";
+      console.error("Join request error:", e);
+      return res.status(400).json({ error: message });
     }
   },
 );
