@@ -16,7 +16,7 @@ export const Team = () => {
   const { spaceId } = useSpaceStore();
   const { id: teamId } = useParams();
   const { data: team } = useGetTeamByIdSync(teamId as string);
-  const { mutate } = useTogglePublishTeamSync();
+  const { mutate } = useTogglePublishTeamSync(teamId as string);
 
   const isLeader = team.leaderId === user?.id;
   const isPublished = team.isPublished;

@@ -44,12 +44,12 @@ export const useGetUserTeamByCohortSync = (cohortId: string) => {
   });
 };
 
-export const useTogglePublishTeamSync = () => {
+export const useTogglePublishTeamSync = (teamId: string) => {
   return useMutation({
     mutationFn: TOGGLE_PUBLISH_TEAM,
     onSuccess: () => {
       toast.success("Team published successfully");
-      queryClient.invalidateQueries({ queryKey: ["userTeam"] });
+      queryClient.invalidateQueries({ queryKey: ["team", teamId] });
     },
     onError: (error) => {
       console.error(error);
