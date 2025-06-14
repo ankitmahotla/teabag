@@ -110,14 +110,13 @@ export const getTeamById = asyncHandler(async (req: Request, res: Response) => {
 
 export const createTeam = asyncHandler(async (req: Request, res: Response) => {
   const user = req.user;
+  const { name, description, cohortId } = req.body;
+
+  if (!name || !cohortId) {
+    return res.status(400).json({ error: "Name and cohortId are required" });
+  }
 
   try {
-    const { name, description, cohortId } = req.body;
-
-    if (!name || !cohortId) {
-      return res.status(400).json({ error: "Name and cohortId are required" });
-    }
-
     const cohortMembership = await db
       .select()
       .from(cohortMemberships)
@@ -151,38 +150,40 @@ export const createTeam = asyncHandler(async (req: Request, res: Response) => {
         .json({ error: "User already has a team in this cohort" });
     }
 
-    const [newTeam] = await db
-      .insert(teams)
-      .values({
-        name,
-        description,
+    const result = await db.transaction(async (tx) => {
+      const [newTeam] = await tx
+        .insert(teams)
+        .values({
+          name,
+          description,
+          cohortId,
+          leaderId: user.id,
+        })
+        .returning();
+
+      if (!newTeam) throw new Error("Team creation failed");
+
+      await tx.insert(teamMemberships).values({
+        userId: user.id,
+        teamId: newTeam.id,
         cohortId,
-        leaderId: user.id,
-      })
-      .returning();
+      });
 
-    if (!newTeam) {
-      return res.status(500).json({ error: "Failed to create team" });
-    }
+      await tx.insert(userInteractions).values({
+        userId: user.id,
+        type: "team_created",
+        teamId: newTeam.id,
+        cohortId: newTeam.cohortId,
+        note: `Created team "${name}"`,
+      });
 
-    await db.insert(teamMemberships).values({
-      userId: user.id,
-      teamId: newTeam.id,
-      cohortId,
+      return newTeam;
     });
 
-    await db.insert(userInteractions).values({
-      userId: user.id,
-      type: "team_created",
-      teamId: newTeam.id,
-      cohortId: newTeam.cohortId,
-      note: `Created team "${name}"`,
-    });
-
-    res.status(201).json(newTeam);
+    return res.status(201).json(result);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to create team" });
+    return res.status(500).json({ error: "Failed to create team" });
   }
 });
 
@@ -243,65 +244,21 @@ export const requestToJoinTeam = asyncHandler(
     const { teamId } = req.params;
     const { cohortId, note } = req.body;
 
-    if (!teamId) {
-      return res.status(400).json({ error: "Invalid team id" });
-    }
-
-    if (!cohortId) {
-      return res.status(400).json({ error: "Invalid cohort id" });
+    if (!teamId || !cohortId) {
+      return res.status(400).json({ error: "Invalid team or cohort id" });
     }
 
     try {
-      const existingMembership = await db
-        .select()
-        .from(teamMemberships)
-        .where(
-          and(
-            eq(teamMemberships.teamId, teamId),
-            eq(teamMemberships.userId, user.id),
-            isNull(teamMemberships.leftAt),
-          ),
-        );
-
-      if (existingMembership.length > 0) {
-        return res
-          .status(400)
-          .json({ error: "User is already a member of the team" });
-      }
-
-      const leaderOfTeamInCohort = await db
-        .select()
-        .from(teams)
-        .where(
-          and(
-            eq(teams.cohortId, cohortId),
-            eq(teams.leaderId, user.id),
-            isNull(teams.disbandedAt),
-          ),
-        );
-
-      if (leaderOfTeamInCohort.length > 0) {
-        return res
-          .status(400)
-          .json({ error: "User is already a leader of a team in this cohort" });
-      }
-
       const team = await db
         .select()
         .from(teams)
         .where(and(eq(teams.id, teamId), eq(teams.cohortId, cohortId)))
         .then((rows) => rows[0]);
 
-      if (!team) {
+      if (!team || team.leaderId === user.id) {
         return res
           .status(400)
-          .json({ error: "Team does not belong to the provided cohort" });
-      }
-
-      if (team.leaderId === user.id) {
-        return res
-          .status(400)
-          .json({ error: "You cannot request to join your own team" });
+          .json({ error: "Invalid team or self-join attempt" });
       }
 
       const activeMembers = await db
@@ -315,12 +272,10 @@ export const requestToJoinTeam = asyncHandler(
         );
 
       if (activeMembers.length >= 4) {
-        return res.status(400).json({
-          error: "Team already has the maximum number of members (4)",
-        });
+        return res.status(400).json({ error: "Team is full" });
       }
 
-      const existingRequest = await db
+      const [existingRequest] = await db
         .select()
         .from(teamJoinRequests)
         .where(
@@ -330,76 +285,53 @@ export const requestToJoinTeam = asyncHandler(
           ),
         );
 
-      if (existingRequest.length > 0) {
-        const existing = existingRequest[0];
+      const safeNote =
+        typeof note === "string" ? note.trim().slice(0, 500) : null;
 
-        if (["pending", "accepted"].includes(existing.status)) {
-          return res.status(400).json({
-            error: `You already have a ${existing?.status} request to this team`,
-          });
-        }
+      await db.transaction(async (tx) => {
+        if (existingRequest) {
+          if (existingRequest.status === "withdrawn") {
+            const now = Date.now();
+            const withdrawAt = existingRequest.withdrawnAt?.getTime() ?? 0;
+            if (now - withdrawAt < 86400000) {
+              throw new Error("Can only reapply after 24 hours of withdrawal");
+            }
 
-        if (existing?.status === "withdrawn") {
-          const withdrawAtTime = existing?.withdrawnAt?.getTime();
-          const now = Date.now();
-          const timeElapsed = now - (withdrawAtTime ?? 0);
-
-          if (timeElapsed < 1000 * 60 * 60 * 24) {
-            return res.status(400).json({
-              error: "You can only send a rejoin request after 24 hours",
-            });
+            await tx
+              .update(teamJoinRequests)
+              .set({
+                status: "pending",
+                withdrawnAt: null,
+                createdAt: new Date(),
+                note: safeNote,
+              })
+              .where(eq(teamJoinRequests.id, existingRequest.id));
+          } else {
+            throw new Error(
+              `You already have a ${existingRequest.status} request`,
+            );
           }
-
-          const safeNote =
-            typeof note === "string" ? note.trim().slice(0, 500) : null;
-
-          await db
-            .update(teamJoinRequests)
-            .set({
-              note: safeNote,
-              status: "pending",
-              withdrawnAt: null,
-              createdAt: new Date(),
-            })
-            .where(eq(teamJoinRequests.id, existing.id));
-
-          await db.insert(userInteractions).values({
+        } else {
+          await tx.insert(teamJoinRequests).values({
             userId: user.id,
-            type: "requested_join",
             teamId,
-            cohortId,
-            note: `User requested to join team ${team.name}`,
-          });
-
-          return res
-            .status(200)
-            .json({ message: "Re-activated withdrawn request" });
-        }
-
-        if (existing?.status === "rejected") {
-          return res.status(400).json({
-            error:
-              "Your request was rejected. You cannot reapply to this team.",
+            note: safeNote,
           });
         }
-      }
 
-      await db
-        .insert(teamJoinRequests)
-        .values({ userId: user.id, teamId, note });
-
-      await db.insert(userInteractions).values({
-        userId: user.id,
-        type: "requested_join",
-        teamId,
-        cohortId,
-        note,
+        await tx.insert(userInteractions).values({
+          userId: user.id,
+          type: "requested_join",
+          teamId,
+          cohortId,
+          note: `User requested to join team`,
+        });
       });
 
-      return res.status(200).json({ message: "Added team join request" });
+      return res.status(200).json({ message: "Request submitted" });
     } catch (e) {
       console.error(e);
-      return res.status(500).json({ error: "Error processing join request" });
+      return res.status(400).json({ error: e || "Failed to request join" });
     }
   },
 );
@@ -409,12 +341,10 @@ export const withdrawTeamJoiningRequest = asyncHandler(
     const user = req.user;
     const { teamId } = req.params;
 
-    if (!teamId) {
-      return res.status(400).json({ error: "Invalid team id" });
-    }
+    if (!teamId) return res.status(400).json({ error: "Invalid team id" });
 
     try {
-      const existingRequest = await db
+      const [request] = await db
         .select()
         .from(teamJoinRequests)
         .where(
@@ -424,66 +354,38 @@ export const withdrawTeamJoiningRequest = asyncHandler(
           ),
         );
 
-      if (existingRequest.length === 0) {
-        return res.status(400).json({
-          error: "You have not requested to join this team",
-        });
+      if (!request)
+        return res.status(400).json({ error: "No join request found" });
+      if (request.status === "accepted")
+        return res
+          .status(400)
+          .json({ error: "Cannot withdraw an accepted request" });
+
+      const elapsed = Date.now() - request.createdAt.getTime();
+      if (elapsed < 86400000) {
+        return res
+          .status(400)
+          .json({ error: "You can only withdraw after 24 hours" });
       }
 
-      const request = existingRequest[0];
+      await db.transaction(async (tx) => {
+        await tx
+          .update(teamJoinRequests)
+          .set({ withdrawnAt: new Date(), status: "withdrawn" })
+          .where(eq(teamJoinRequests.id, request.id));
 
-      if (!request) {
-        return res.status(400).json({
-          error: "Invalid request",
+        await tx.insert(userInteractions).values({
+          userId: user.id,
+          type: "withdrew_request",
+          teamId,
+          note: "User withdrew request after 24h",
         });
-      }
-
-      if (request.status === "accepted") {
-        return res.status(400).json({
-          error: "Cannot withdraw an already accepted request",
-        });
-      }
-
-      if (request.status === "rejected") {
-        return res.status(400).json({
-          error: "Cannot withdraw a rejected request",
-        });
-      }
-
-      const createdAtTime = request.createdAt.getTime();
-      const now = Date.now();
-      const timeElapsed = now - createdAtTime;
-
-      if (timeElapsed < 1000 * 60 * 60 * 24) {
-        return res.status(400).json({
-          error: "You can only withdraw your request after 24 hours",
-        });
-      }
-
-      await db
-        .update(teamJoinRequests)
-        .set({
-          withdrawnAt: new Date(),
-          status: "withdrawn",
-        })
-        .where(
-          and(
-            eq(teamJoinRequests.teamId, teamId),
-            eq(teamJoinRequests.userId, user.id),
-          ),
-        );
-
-      await db.insert(userInteractions).values({
-        userId: user.id,
-        type: "withdrew_request",
-        teamId,
-        note: "User withdrew join request after 24h",
       });
 
-      return res.status(200).json({ message: "Withdrawn team join request" });
+      return res.status(200).json({ message: "Request withdrawn" });
     } catch (e) {
       console.error(e);
-      return res.status(500).json({ error: "Error processing withdrawal" });
+      return res.status(500).json({ error: "Error withdrawing request" });
     }
   },
 );
@@ -800,81 +702,54 @@ export const kickTeamMember = asyncHandler(
     const { teamId } = req.params;
     const { teamMemberId, reason } = req.body;
 
-    if (!teamId) {
-      return res.status(400).json({ error: "Team ID is required" });
-    }
-
-    if (!teamMemberId || !reason) {
-      return res
-        .status(400)
-        .json({ error: "Team member ID and reason are required" });
+    if (!teamId || !teamMemberId || !reason) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
     try {
       const [team] = await db.select().from(teams).where(eq(teams.id, teamId));
-      if (!team) {
-        return res.status(404).json({ error: "Team not found" });
+      if (!team || team.leaderId !== user.id) {
+        return res.status(403).json({ error: "Not authorized" });
       }
 
-      const [teamMember] = await db
-        .select({
-          name: users.name,
-          email: users.email,
-        })
-        .from(teamMemberships)
-        .innerJoin(users, eq(teamMemberships.userId, users.id))
-        .where(
-          and(
-            eq(teamMemberships.userId, teamMemberId),
-            eq(teamMemberships.teamId, teamId),
-          ),
-        );
-
-      if (!teamMember) {
-        return res.status(404).json({ error: "Team member not found" });
-      }
-
-      if (user.id !== team.leaderId) {
-        return res.status(403).json({
-          error: "You do not have permission to kick this team member",
+      await db.transaction(async (tx) => {
+        await tx.insert(teamKickHistory).values({
+          teamId,
+          kickedUserId: teamMemberId,
+          kickedById: user.id,
+          reason,
         });
-      }
 
-      await db.insert(teamKickHistory).values({
-        teamId,
-        kickedUserId: teamMemberId,
-        kickedById: user.id,
-        reason,
+        await tx
+          .delete(teamJoinRequests)
+          .where(eq(teamJoinRequests.userId, teamMemberId));
+
+        await tx
+          .update(teamMemberships)
+          .set({
+            leftAt: new Date(),
+            leftReason: reason,
+          })
+          .where(
+            and(
+              eq(teamMemberships.userId, teamMemberId),
+              eq(teamMemberships.teamId, teamId),
+            ),
+          );
+
+        await tx.insert(userInteractions).values({
+          userId: user.id,
+          type: "kicked_team_member",
+          teamId,
+          relatedUserId: teamMemberId,
+          note: reason,
+        });
       });
 
-      await db
-        .delete(teamJoinRequests)
-        .where(eq(teamJoinRequests.userId, teamMemberId));
-
-      await db
-        .update(teamMemberships)
-        .set({ leftAt: new Date(), leftReason: reason })
-        .where(
-          and(
-            eq(teamMemberships.userId, teamMemberId),
-            eq(teamMemberships.teamId, teamId),
-          ),
-        );
-
-      await db.insert(userInteractions).values({
-        userId: user.id,
-        type: "kicked_team_member",
-        teamId,
-        relatedUserId: teamMemberId,
-        note: reason,
-      });
-
-      return res
-        .status(200)
-        .json({ message: "Team member kicked successfully" });
-    } catch (error) {
-      console.error("Error kicking team member:", error);
-      return res.status(500).json({ error: "Failed to kick team member" });
+      return res.status(200).json({ message: "Team member kicked" });
+    } catch (e) {
+      console.error(e);
+      return res.status(500).json({ error: "Failed to kick member" });
     }
   },
 );
@@ -1015,103 +890,70 @@ export const teamLeadershipTransferResponse = asyncHandler(
     const user = req.user;
     const { transferRequestId, status } = req.body;
 
-    if (!transferRequestId) {
-      return res.status(400).json({ error: "Transfer request ID is required" });
-    }
-
     const validStatuses = ["accepted", "rejected", "cancelled"];
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ error: "Invalid status provided" });
+      return res.status(400).json({ error: "Invalid status" });
     }
 
     try {
-      const [transferRequest] = await db
+      const [request] = await db
         .select()
         .from(teamLeaderTransfers)
         .where(eq(teamLeaderTransfers.id, transferRequestId));
 
-      if (!transferRequest) {
-        return res.status(404).json({ error: "Transfer request not found" });
+      if (!request || request.respondedAt || request.status !== "pending") {
+        return res.status(400).json({ error: "Request already processed" });
       }
 
-      const isRequester = user.id === transferRequest.fromUserId;
-      const isReceiver = user.id === transferRequest.toUserId;
+      const isReceiver = user.id === request.toUserId;
+      const isRequester = user.id === request.fromUserId;
 
-      if (transferRequest.status !== "pending" || transferRequest.respondedAt) {
-        return res
-          .status(400)
-          .json({ error: "Transfer request has already been responded to" });
+      if (status === "cancelled" && !isRequester) {
+        return res.status(403).json({ error: "Only the requester can cancel" });
+      }
+      if ((status === "accepted" || status === "rejected") && !isReceiver) {
+        return res.status(403).json({ error: "Only the receiver can respond" });
       }
 
-      if (status === "cancelled") {
-        if (!isRequester) {
-          return res
-            .status(403)
-            .json({ error: "Only the team leader can cancel the request" });
+      await db.transaction(async (tx) => {
+        if (status === "accepted") {
+          await tx
+            .update(teams)
+            .set({ leaderId: request.toUserId })
+            .where(eq(teams.id, request.teamId));
+
+          await tx.insert(userInteractions).values({
+            userId: request.toUserId,
+            type: "promoted_to_leader",
+            teamId: request.teamId,
+            cohortId: request.cohortId,
+            note: `Accepted leadership`,
+          });
         }
 
-        await db
+        await tx
           .update(teamLeaderTransfers)
-          .set({ status: "cancelled", respondedAt: new Date() })
+          .set({
+            status,
+            respondedAt: new Date(),
+          })
           .where(eq(teamLeaderTransfers.id, transferRequestId));
 
-        await db.insert(userInteractions).values({
-          userId: transferRequest.fromUserId,
-          type: "leadership_transfer_cancelled_by_requester",
-          teamId: transferRequest.teamId,
-          cohortId: transferRequest.cohortId,
-          relatedUserId: transferRequest.toUserId,
-          note: "User cancelled leadership transfer request",
+        await tx.insert(userInteractions).values({
+          userId: user.id,
+          type: `${status}_leadership_transfer_request`,
+          teamId: request.teamId,
+          cohortId: request.cohortId,
+          relatedUserId:
+            status === "cancelled" ? request.toUserId : request.fromUserId,
+          note: `Leadership transfer ${status}`,
         });
-
-        return res
-          .status(200)
-          .json({ message: "Leadership transfer request was cancelled" });
-      }
-
-      if (!isReceiver) {
-        return res.status(403).json({
-          error: "Only the requested receiver can respond to this transfer",
-        });
-      }
-
-      if (status === "accepted") {
-        await db
-          .update(teams)
-          .set({ leaderId: user.id })
-          .where(eq(teams.id, transferRequest.teamId));
-
-        await db.insert(userInteractions).values({
-          userId: transferRequest.toUserId,
-          type: "promoted_to_leader",
-          teamId: transferRequest.teamId,
-          cohortId: transferRequest.cohortId,
-          note: `User was promoted to leader of teamId: ${transferRequest.teamId}`,
-        });
-      }
-
-      await db
-        .update(teamLeaderTransfers)
-        .set({ status, respondedAt: new Date() })
-        .where(eq(teamLeaderTransfers.id, transferRequestId));
-
-      await db.insert(userInteractions).values({
-        userId: transferRequest.toUserId,
-        type: `${status}_leadership_transfer_request`,
-        teamId: transferRequest.teamId,
-        cohortId: transferRequest.cohortId,
-        relatedUserId: transferRequest.fromUserId,
-        note: `User ${status} team leadership request of teamId: ${transferRequest.teamId}`,
       });
 
-      return res
-        .status(200)
-        .json({ message: `Leadership transfer request was ${status}` });
+      return res.status(200).json({ message: `Transfer ${status}` });
     } catch (e) {
-      console.error("Error responding to leadership transfer request:", e);
-      return res
-        .status(500)
-        .json({ error: "Error responding to leadership transfer request" });
+      console.error("Leadership transfer error:", e);
+      return res.status(500).json({ error: "Transfer handling failed" });
     }
   },
 );
