@@ -214,3 +214,167 @@
  *                   type: string
  *                   example: Internal Server Error
  */
+/**
+ * @openapi
+ * /api/user/requests/{cohortId}:
+ *   get:
+ *     summary: Get user's team join requests for a specific cohort
+ *     description: |
+ *       Retrieves all team joining requests made by the authenticated user in the specified cohort.
+ *       Requires user authentication via HTTP-only cookies.
+ *     tags:
+ *       - User
+ *     parameters:
+ *       - in: path
+ *         name: cohortId
+ *         required: true
+ *         description: UUID of the cohort
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved team joining requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 requests:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       requestId:
+ *                         type: string
+ *                         format: uuid
+ *                         example: 123e4567-e89b-12d3-a456-426614174000
+ *                       teamId:
+ *                         type: string
+ *                         format: uuid
+ *                         example: a1b2c3d4-e5f6-7890-1234-56789abcdef0
+ *                       teamName:
+ *                         type: string
+ *                         example: Alpha Squad
+ *                       status:
+ *                         type: string
+ *                         enum: [pending, accepted, rejected]
+ *                         example: pending
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: 2025-06-10T12:34:56Z
+ *       400:
+ *         description: Cohort ID is required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Cohort ID is required
+ *       401:
+ *         description: User is not authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Unauthorized
+ *       500:
+ *         description: Internal server error while fetching team join requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Error fetching team joining requests for user
+ */
+/**
+ * @openapi
+ * /api/user/{id}/interactions:
+ *   get:
+ *     summary: Get user interactions (paginated)
+ *     description: |
+ *       Retrieves a paginated list of interactions for a given user ID.
+ *       Supports cursor-based pagination via `cursor` query parameter.
+ *     tags:
+ *       - User
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: UUID of the user
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         description: Number of interactions to fetch (default 10)
+ *         schema:
+ *           type: integer
+ *           example: 10
+ *       - in: query
+ *         name: cursor
+ *         required: false
+ *         description: A timestamp cursor to paginate results
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *           example: 2025-06-14T10:00:00Z
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user interactions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     description: Interaction record
+ *                     properties:
+ *                       userId:
+ *                         type: string
+ *                         format: uuid
+ *                         example: e9f25759-e292-4e33-94d7-1a6cce4c1468
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: 2025-06-14T12:00:00Z
+ *                       ...:
+ *                         description: Other interaction-specific fields
+ *                 nextCursor:
+ *                   type: string
+ *                   format: date-time
+ *                   nullable: true
+ *                   example: 2025-06-13T09:30:00Z
+ *       400:
+ *         description: Missing or invalid user ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: User ID is required
+ *       500:
+ *         description: Internal server error while fetching interactions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Failed to fetch interactions
+ */
