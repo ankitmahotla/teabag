@@ -10,6 +10,7 @@ import {
 } from "../db/schema";
 import { asyncHandler } from "../utils/async-handler";
 import { inArray } from "drizzle-orm";
+import { logError } from "../utils/logError";
 
 export const uploadStudentCSV = asyncHandler(
   async (req: Request, res: Response) => {
@@ -96,11 +97,11 @@ export const uploadStudentCSV = asyncHandler(
         message: `Uploaded ${uniqueEmails.length} emails`,
         skipped,
       });
-    } catch (error: any) {
-      console.error("Error uploading student emails:", error.message);
+    } catch (e: any) {
+      logError("Error uploading student emails:", e);
       return res
         .status(500)
-        .json({ error: error.message || "Internal server error" });
+        .json({ error: e.message || "Internal server error" });
     } finally {
       fs.unlink(file.path).catch((err) =>
         console.warn("Failed to delete uploaded CSV file:", err),

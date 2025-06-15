@@ -48,7 +48,7 @@ export const getAllTeams = asyncHandler(async (req: Request, res: Response) => {
 
     return res.status(200).json(teamsWithCount);
   } catch (e) {
-    console.error(e);
+    logError("Error retrieving teams:", e);
     return res.status(500).json({ error: "Failed to retrieve teams" });
   }
 });
@@ -104,7 +104,7 @@ export const getTeamById = asyncHandler(async (req: Request, res: Response) => {
 
     return res.status(200).json(team);
   } catch (e) {
-    console.error(e);
+    logError("Error retrieving team", e);
     return res.status(500).json({ error: "Failed to retrieve team" });
   }
 });
@@ -182,8 +182,8 @@ export const createTeam = asyncHandler(async (req: Request, res: Response) => {
     });
 
     return res.status(201).json(result);
-  } catch (error) {
-    console.error(error);
+  } catch (e) {
+    logError("Error while creating team:", e);
     return res.status(500).json({ error: "Failed to create team" });
   }
 });
@@ -232,8 +232,8 @@ export const togglePublishTeam = asyncHandler(
         message: `Team ${newPublishState ? "published" : "unpublished"} successfully`,
         isPublished: newPublishState,
       });
-    } catch (error) {
-      console.error(error);
+    } catch (e) {
+      logError("Error in toggle team publish state:", e);
       return res.status(500).json({ error: "Failed to toggle publish state" });
     }
   },
@@ -331,8 +331,8 @@ export const requestToJoinTeam = asyncHandler(
 
       return res.status(200).json({ message: "Request submitted" });
     } catch (e) {
-      console.error(e);
-      return res.status(400).json({ error: e || "Failed to request join" });
+      logError("Error while sending request to join", e);
+      return res.status(400).json({ error: "Failed to request join" });
     }
   },
 );
@@ -385,8 +385,9 @@ export const withdrawTeamJoiningRequest = asyncHandler(
 
       return res.status(200).json({ message: "Request withdrawn" });
     } catch (e) {
-      console.error(e);
-      return res.status(500).json({ error: "Error withdrawing request" });
+      logError("Error withdrawing request:", e);
+      e;
+      return res.status(500).json({ error: "Failed to withdraw request" });
     }
   },
 );
@@ -434,7 +435,7 @@ export const getTeamRequestStatus = asyncHandler(
         request: hasRequested ? request[0] : null,
       });
     } catch (e) {
-      console.error("Error checking join request status:", e);
+      logError("Error checking join request status:", e);
       return res.status(500).json({ error: "Failed to fetch request status" });
     }
   },
@@ -472,7 +473,7 @@ export const getPendingTeamJoinRequests = asyncHandler(
 
       return res.status(200).json({ requests });
     } catch (e) {
-      console.error("Error fetching pending join requests:", e);
+      logError("Error fetching pending join requests:", e);
       return res
         .status(500)
         .json({ error: "Failed to fetch pending requests" });
@@ -617,10 +618,9 @@ export const updateTeamJoinRequestStatus = asyncHandler(
       });
 
       return res.status(200).json({ request: result });
-    } catch (e: any) {
-      const message = e?.message || "Failed to update join request status";
-      console.error("Join request error:", e);
-      return res.status(400).json({ error: message });
+    } catch (e) {
+      logError("Join request error:", e);
+      return res.status(400).json({ error: "Failed to update join request" });
     }
   },
 );
@@ -692,7 +692,7 @@ export const disbandTeam = asyncHandler(async (req: Request, res: Response) => {
 
     return res.status(200).json({ message: "Team disbanded successfully" });
   } catch (e) {
-    console.error("Error disbanding team:", e);
+    logError("Error disbanding team:", e);
     return res.status(500).json({ error: "Failed to disband team" });
   }
 });
@@ -749,7 +749,7 @@ export const kickTeamMember = asyncHandler(
 
       return res.status(200).json({ message: "Team member kicked" });
     } catch (e) {
-      console.error(e);
+      logError("Failed to kick member:", e);
       return res.status(500).json({ error: "Failed to kick member" });
     }
   },
@@ -788,7 +788,7 @@ export const getTeamMembers = asyncHandler(
 
       return res.status(200).json({ members });
     } catch (e) {
-      console.error("Error fetching team members:", e);
+      logError("Error fetching team members:", e);
       return res.status(500).json({ error: "Failed to fetch team members" });
     }
   },
@@ -880,8 +880,10 @@ export const teamLeadershipTransferRequest = asyncHandler(
         .status(200)
         .json({ message: "Leadership transfer request submitted" });
     } catch (e) {
-      console.error("Error requesting leadership transfer:", e);
-      return res.status(500).json({ error: "Internal server error" });
+      logError("Error requesting leadership transfer:", e);
+      return res
+        .status(500)
+        .json({ error: "Error requesting leadership transfer" });
     }
   },
 );
@@ -953,7 +955,7 @@ export const teamLeadershipTransferResponse = asyncHandler(
 
       return res.status(200).json({ message: `Transfer ${status}` });
     } catch (e) {
-      console.error("Leadership transfer error:", e);
+      logError("Leadership transfer error:", e);
       return res.status(500).json({ error: "Transfer handling failed" });
     }
   },
@@ -995,7 +997,7 @@ export const getPendingTeamLeadershipTransferRequests = asyncHandler(
 
       return res.status(200).json({ request });
     } catch (e) {
-      console.error("Error fetching pending leadership transfer requests:", e);
+      logError("Failed to fetch transfer requests", e);
       return res
         .status(500)
         .json({ error: "Failed to fetch transfer requests" });
@@ -1057,7 +1059,7 @@ export const leaveTeam = asyncHandler(async (req: Request, res: Response) => {
 
     return res.status(200).json({ message: "Team left successfully" });
   } catch (e: unknown) {
-    logError("Error leaving team", e);
+    logError("Error leaving team:", e);
     return res.status(500).json({ error: "Failed to leave team" });
   }
 });

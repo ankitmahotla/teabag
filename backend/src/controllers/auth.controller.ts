@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { generateTokens } from "../lib/tokens";
 import { verifyToken } from "../utils/verify-token";
 import { asyncHandler } from "../utils/async-handler";
+import { logError } from "../utils/logError";
 
 const client = new OAuth2Client({
   clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -107,7 +108,7 @@ export const signIn = asyncHandler(async (req: Request, res: Response) => {
       },
     });
   } catch (e) {
-    console.error("Google sign-in error:", e);
+    logError("Google sign-in error:", e);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -134,7 +135,7 @@ export const signOut = asyncHandler(async (req: Request, res: Response) => {
 
     return res.status(200).json({ success: true });
   } catch (e) {
-    console.error("Logout failed:", e);
+    logError("Logout failed:", e);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -183,7 +184,7 @@ export const refreshTokens = asyncHandler(
         },
       });
     } catch (e) {
-      console.error("Token refresh failed:", e);
+      logError("Token refresh failed:", e);
       return res
         .status(401)
         .json({ error: "Invalid or expired refresh token" });

@@ -11,6 +11,7 @@ import {
   users,
 } from "../db/schema";
 import { and, desc, eq, isNull, lt } from "drizzle-orm";
+import { logError } from "../utils/logError";
 
 export const getUserById = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -62,7 +63,7 @@ export const getUserById = asyncHandler(async (req: Request, res: Response) => {
 
     return res.status(200).json({ user });
   } catch (e) {
-    console.error(e);
+    logError("Internal Server Error:", e);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });
@@ -90,7 +91,7 @@ export const getUserCohorts = asyncHandler(
 
       return res.status(200).json({ cohortsDetails: userCohorts });
     } catch (e) {
-      console.error(e);
+      logError("Error fetching user cohorts:", e);
       return res.status(500).json({ error: "Error fetching user cohorts" });
     }
   },
@@ -147,7 +148,7 @@ export const getUserTeamByCohort = asyncHandler(
         teamDetails: team,
       });
     } catch (e) {
-      console.error(e);
+      logError("Error fetching team details:", e);
       return res.status(500).json({ error: "Error fetching team details" });
     }
   },
@@ -189,7 +190,7 @@ export const getAllUserTeamJoiningRequestsByCohort = asyncHandler(
         requests,
       });
     } catch (e) {
-      console.error(e);
+      logError("Error fetching team joining requests for user:", e);
       return res
         .status(500)
         .json({ error: "Error fetching team joining requests for user" });
@@ -230,7 +231,7 @@ export const getUserInteractions = asyncHandler(
 
       return res.status(200).json({ data, nextCursor });
     } catch (e) {
-      console.error(e);
+      logError("Error fetching user interactions:", e);
       return res.status(500).json({ error: "Failed to fetch interactions" });
     }
   },

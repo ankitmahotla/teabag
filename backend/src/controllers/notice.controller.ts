@@ -2,6 +2,7 @@ import { db } from "../db";
 import { teamNoticeBoard, teams } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { asyncHandler } from "../utils/async-handler";
+import { logError } from "../utils/logError";
 
 async function isTeamLeader(teamId: string, userId: string) {
   const result = await db
@@ -40,7 +41,8 @@ export const createNotice = asyncHandler(async (req, res) => {
       .returning();
 
     res.status(201).json(newNotice[0]);
-  } catch (error) {
+  } catch (e) {
+    logError("Error creating notice:", e);
     res.status(500).json({ error: "Failed to create notice" });
   }
 });
@@ -60,7 +62,8 @@ export const getNoticesByTeam = asyncHandler(async (req, res) => {
       .orderBy(teamNoticeBoard.createdAt);
 
     res.status(200).json(notices);
-  } catch (error) {
+  } catch (e) {
+    logError("Error fetching notices:", e);
     res.status(500).json({ error: "Failed to fetch notices" });
   }
 });
@@ -103,7 +106,8 @@ export const updateNotice = asyncHandler(async (req, res) => {
       .returning();
 
     res.status(200).json(updated[0]);
-  } catch (error) {
+  } catch (e) {
+    logError("Error updating notice:", e);
     res.status(500).json({ error: "Failed to update notice" });
   }
 });
@@ -142,7 +146,8 @@ export const deleteNotice = asyncHandler(async (req, res) => {
       .returning();
 
     res.status(200).json({ message: "Notice deleted successfully" });
-  } catch (error) {
+  } catch (e) {
+    logError("Error deleting notice:", e);
     res.status(500).json({ error: "Failed to delete notice" });
   }
 });
