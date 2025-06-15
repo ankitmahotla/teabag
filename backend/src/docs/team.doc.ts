@@ -4,7 +4,7 @@
  *   get:
  *     summary: Get all published teams in a specific cohort
  *     description: |
- *       Retrieves all teams that belong to the specified cohort.
+ *       Retrieves all active, published teams within the specified cohort.
  *       Requires user authentication via HTTP-only cookies.
  *     tags:
  *       - Teams
@@ -14,10 +14,10 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID of the cohort to filter teams by
+ *         description: UUID of the cohort to filter teams by
  *     responses:
  *       200:
- *         description: Successfully retrieved teams
+ *         description: Successfully retrieved list of teams
  *         content:
  *           application/json:
  *             schema:
@@ -27,125 +27,29 @@
  *                 properties:
  *                   id:
  *                     type: string
- *                     example: 089d1d63-29f2-4b57-9470-acf181b68499
  *                   name:
  *                     type: string
- *                     example: Hydration Error
  *                   description:
  *                     type: string
- *                     example: ""
  *                   cohortId:
  *                     type: string
- *                     example: 0023bbee-9b28-4a37-9fd1-40ebe1a720bb
- *                   leaderId:
- *                     type: string
- *                     example: e9f25759-e292-4e33-94d7-1a6cce4c1468
  *                   isPublished:
  *                     type: boolean
- *                     example: true
  *                   createdAt:
  *                     type: string
  *                     format: date-time
- *                     example: 2025-06-04T14:06:16.031Z
  *                   disbandedAt:
  *                     type: string
+ *                     format: date-time
  *                     nullable: true
- *                     example: null
+ *                   memberCount:
+ *                     type: integer
  *       400:
- *         description: CohortId is missing in query
+ *         description: CohortId is required
  *       401:
- *         description: User is not authenticated
+ *         description: User not authenticated
  *       500:
  *         description: Internal server error
- */
-
-/**
- * @openapi
- * /api/teams/{id}:
- *   get:
- *     summary: Get team details by ID
- *     description: |
- *       Retrieves the details of a specific team by its ID, including team members.
- *       Requires user authentication via HTTP-only cookies.
- *     tags:
- *       - Teams
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: The ID of the team to retrieve.
- *     responses:
- *       200:
- *         description: Successfully retrieved team
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: string
- *                   format: uuid
- *                   example: 089d1d63-29f2-4b57-9470-acf181b68499
- *                 name:
- *                   type: string
- *                   example: Hydration Error
- *                 description:
- *                   type: string
- *                   nullable: true
- *                   example: ""
- *                 cohortId:
- *                   type: string
- *                   format: uuid
- *                   example: 0023bbee-9b28-4a37-9fd1-40ebe1a720bb
- *                 isPublished:
- *                   type: boolean
- *                   example: false
- *                 members:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       membershipId:
- *                         type: string
- *                         format: uuid
- *                         example: 756fd9e4-8772-49b5-8131-5348b3e29333
- *                       userId:
- *                         type: string
- *                         format: uuid
- *                         example: e9f25759-e292-4e33-94d7-1a6cce4c1468
- *       401:
- *         description: User is not authenticated
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: User not found
- *       404:
- *         description: Team not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: Team not found
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: Failed to retrieve team
  */
 
 /**
@@ -154,8 +58,7 @@
  *   post:
  *     summary: Create a new team
  *     description: |
- *       Creates a new team within a specific cohort.
- *       The authenticated user becomes the team leader and is automatically added to the team.
+ *       Creates a new team within the specified cohort. The authenticated user becomes the team leader and is added as a member.
  *     tags:
  *       - Teams
  *     requestBody:
@@ -164,9 +67,7 @@
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - name
- *               - cohortId
+ *             required: [name, cohortId]
  *             properties:
  *               name:
  *                 type: string
@@ -176,92 +77,313 @@
  *                 type: string
  *     responses:
  *       201:
- *         description: Team successfully created
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 name:
- *                   type: string
- *                   example: Hydration Error
- *                 description:
- *                   type: string
- *                   example: ""
- *                 cohortId:
- *                   type: string
- *                   example: 0023bbee-9b28-4a37-9fd1-40ebe1a720bb
- *                 leaderId:
- *                   type: string
- *                   example: e9f25759-e292-4e33-94d7-1a6cce4c1468
+ *         description: Team created successfully
  *       400:
- *         description: Validation error or user already has a team in the cohort
+ *         description: Missing name or cohortId, or user already has a team
  *       401:
- *         description: User is not authenticated
+ *         description: Not authenticated
+ *       403:
+ *         description: User not a member of the cohort
  *       500:
  *         description: Failed to create team
  */
 
 /**
  * @openapi
+ * /api/teams/{id}:
+ *   get:
+ *     summary: Get team details by ID
+ *     description: Retrieves a team's full details, including active members.
+ *     tags:
+ *       - Teams
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Team retrieved
+ *       400:
+ *         description: Missing team ID
+ *       404:
+ *         description: Team not found
+ *       500:
+ *         description: Failed to retrieve team
+ */
+
+/**
+ * @openapi
  * /api/teams/{teamId}/toggle-publish:
  *   put:
- *     summary: Toggle publish state of a team
- *     description: |
- *       Toggles the published state of a team. Only the team leader can perform this action.
- *       Requires user authentication via HTTP-only cookies.
+ *     summary: Toggle team publish state
+ *     description: Toggle a team’s published status. Only team leaders can perform this.
  *     tags:
  *       - Teams
  *     parameters:
  *       - in: path
  *         name: teamId
  *         required: true
- *         description: UUID of the team to toggle publish state
  *         schema:
  *           type: string
- *           format: uuid
  *     responses:
  *       200:
- *         description: Team publish state updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Team published successfully
- *                 isPublished:
- *                   type: boolean
- *                   example: true
+ *         description: Publish state toggled successfully
  *       400:
- *         description: Missing or invalid team ID
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: Missing team ID
+ *         description: Missing team ID
  *       404:
- *         description: Team not found or not owned by the user
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: Team not found
+ *         description: Team not found or user is not the leader
  *       500:
- *         description: Internal server error while updating publish state
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: Failed to toggle publish state
+ *         description: Failed to toggle publish state
+ */
+
+/**
+ * @openapi
+ * /api/teams/{teamId}/request-join:
+ *   post:
+ *     summary: Request to join a team
+ *     description: Sends a join request to a team. Team must be in same cohort and not full.
+ *     tags:
+ *       - Teams
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [cohortId]
+ *             properties:
+ *               cohortId:
+ *                 type: string
+ *               note:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Request submitted
+ *       400:
+ *         description: Invalid team or self-join or already requested
+ *       500:
+ *         description: Failed to request join
+ */
+
+/**
+ * @openapi
+ * /api/teams/{teamId}/request-join:
+ *   put:
+ *     summary: Withdraw join request
+ *     description: Allows a user to withdraw a join request if 24 hours have passed.
+ *     tags:
+ *       - Teams
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Request withdrawn
+ *       400:
+ *         description: Cannot withdraw within 24 hours or if accepted
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @openapi
+ * /api/teams/{teamId}/request-status:
+ *   get:
+ *     summary: Get team join request status
+ *     description: Checks if the authenticated user has a join request for the specified team.
+ *     tags:
+ *       - Teams
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Status retrieved
+ *       400:
+ *         description: Invalid team ID
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Failed to retrieve status
+ */
+
+/**
+ * @openapi
+ * /api/teams/{teamId}/members:
+ *   get:
+ *     summary: Get members of a team
+ *     description: Lists all active members in a team
+ *     tags:
+ *       - Teams
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Members retrieved
+ *       400:
+ *         description: Team ID required
+ *       404:
+ *         description: Team not found
+ *       500:
+ *         description: Failed to fetch members
+ */
+
+/**
+ * @openapi
+ * /api/teams/{teamId}/kickUser:
+ *   post:
+ *     summary: Kick a user from the team
+ *     description: Only team leaders can kick members.
+ *     tags:
+ *       - Teams
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [teamMemberId, reason]
+ *             properties:
+ *               teamMemberId:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Member kicked successfully
+ *       400:
+ *         description: Missing fields
+ *       403:
+ *         description: Not authorized
+ *       500:
+ *         description: Failed to kick member
+ */
+
+/**
+ * @openapi
+ * /api/teams/{teamId}/disband:
+ *   post:
+ *     summary: Disband a team
+ *     description: Only the team leader can disband a team, providing a reason.
+ *     tags:
+ *       - Teams
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [reason]
+ *             properties:
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Team disbanded successfully
+ *       400:
+ *         description: Missing teamId or reason
+ *       403:
+ *         description: Only leader can disband
+ *       404:
+ *         description: Team not found
+ *       500:
+ *         description: Failed to disband
+ */
+
+/**
+ * @openapi
+ * /api/teams/{teamId}/leadership-transfer:
+ *   post:
+ *     summary: Request leadership transfer
+ *     description: Request to transfer leadership to another active team member.
+ *     tags:
+ *       - Teams
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [receiverId, reason]
+ *             properties:
+ *               receiverId:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Request submitted
+ *       400:
+ *         description: Missing required fields or invalid receiver
+ *       403:
+ *         description: Only leaders can transfer
+ *       409:
+ *         description: Existing pending transfer
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @openapi
+ * /api/teams/{teamId}/leadership-transfer/respond:
+ *   post:
+ *     summary: Respond to leadership transfer request
+ *     description: Accept, reject, or cancel a pending leadership transfer request.
+ *     tags:
+ *       - Teams
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [transferRequestId, status]
+ *             properties:
+ *               transferRequestId:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *                 enum: [accepted, rejected, cancelled]
+ *     responses:
+ *       200:
+ *         description: Transfer handled
+ *       400:
+ *         description: Invalid request or already handled
+ *       403:
+ *         description: Unauthorized action
+ *       500:
+ *         description: Failed to respond
+ */
+
+/**
+ * @openapi
+ * /api/teams/leadership-transfer/requests/pending:
+ *   get:
+ *     summary: Get pending leadership transfer requests
+ *     description: Returns any leadership transfer requests involving the authenticated user.
+ *     tags:
+ *       - Teams
+ *     responses:
+ *       200:
+ *         description: Pending request retrieved
+ *       500:
+ *         description: Failed to fetch pending requests
  */
