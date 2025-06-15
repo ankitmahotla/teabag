@@ -13,6 +13,7 @@ import {
 } from "../db/schema";
 import { and, eq, isNull, count, or, isNotNull } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
+import { logError } from "../utils/logError";
 
 export const getAllTeams = asyncHandler(async (req: Request, res: Response) => {
   const cohortId = req.query.cohortId as string;
@@ -1001,3 +1002,62 @@ export const getPendingTeamLeadershipTransferRequests = asyncHandler(
     }
   },
 );
+
+export const leaveTeam = asyncHandler(async (req: Request, res: Response) => {
+  const user = req.user;
+  const { teamId } = req.params;
+  const { reason } = req.body;
+
+  if (!teamId) {
+    return res.status(400).json({ error: "Missing team ID" });
+  }
+  try {
+    const [team] = await db
+      .select({ id: teams.id, name: teams.name, leaderId: teams.leaderId })
+      .from(teams)
+      .where(eq(teams.id, teamId));
+
+    if (!team) {
+      return res.status(404).json({ error: "Team not found" });
+    }
+
+    if (team.leaderId === user.id) {
+      return res.status(400).json({
+        error: "Team leader cannot leave without transferring leadership.",
+      });
+    }
+
+    const [teamMember] = await db
+      .select({ id: teamMemberships.id })
+      .from(teamMemberships)
+      .where(
+        and(
+          eq(teamMemberships.userId, user.id),
+          eq(teamMemberships.teamId, teamId),
+          isNull(teamMemberships.leftAt),
+        ),
+      );
+
+    if (!teamMember) {
+      return res.status(404).json({ error: "User not a member of team" });
+    }
+
+    await db.transaction(async (tx) => {
+      await tx
+        .update(teamMemberships)
+        .set({ leftAt: new Date(), leftReason: reason });
+
+      await tx.insert(userInteractions).values({
+        userId: user.id,
+        type: "left_team",
+        teamId: teamId,
+        note: `Reason for leaving team: ${reason}`,
+      });
+    });
+
+    return res.status(200).json({ message: "Team left successfully" });
+  } catch (e: unknown) {
+    logError("Error leaving team", e);
+    return res.status(500).json({ error: "Failed to leave team" });
+  }
+});

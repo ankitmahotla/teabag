@@ -8,10 +8,8 @@ import Link from "next/link";
 export const Profile = () => {
   const params = useParams();
   const userId = params.id as string;
-  console.log(userId);
   const { data } = useGetUserByIdSync(userId);
   const user = data?.user;
-  console.log(user);
   const isTeamLeader = userId === user?.teamLeaderId;
 
   return (

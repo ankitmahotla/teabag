@@ -10,6 +10,7 @@ import { PendingTransferRequests } from "./pending-transfer";
 import { PendingRequests } from "./pending-requests";
 import { CreateNoticeForm } from "../forms/create-notice";
 import { RecentNotices } from "../home/recent-notices";
+import { LeaveTeamDialog } from "./leave-team";
 
 export const Team = () => {
   const { user } = useSessionStore();
@@ -32,6 +33,9 @@ export const Team = () => {
           <div className="mb-10">
             <h1 className="text-3xl font-semibold">{team.name}</h1>
             <p className="text-sm text-muted-foreground">{team.description}</p>
+            <div className="mt-6">
+              {!isLeader && <LeaveTeamDialog teamId={team.id} />}
+            </div>
           </div>
           <section className="space-y-4">
             <h2 className="text-xl font-semibold">Team Members</h2>

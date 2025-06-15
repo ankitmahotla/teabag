@@ -387,3 +387,74 @@
  *       500:
  *         description: Failed to fetch pending requests
  */
+
+/**
+ * @openapi
+ * /api/teams/{teamId}/leave:
+ *   post:
+ *     summary: Leave a team
+ *     description: |
+ *       Allows an authenticated user to leave a team they are currently a member of.
+ *       The reason for leaving can be optionally provided.
+ *       Team leaders must transfer leadership before leaving the team.
+ *     tags:
+ *       - Teams
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: UUID of the team to leave
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reason:
+ *                 type: string
+ *                 description: Optional reason for leaving the team
+ *     responses:
+ *       200:
+ *         description: Successfully left the team
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Team left successfully
+ *       400:
+ *         description: Missing team ID or team leader attempting to leave
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Team leader cannot leave without transferring leadership.
+ *       404:
+ *         description: Team not found or user is not a member
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Team not found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Failed to leave team
+ */

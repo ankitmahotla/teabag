@@ -176,3 +176,17 @@ export const DELETE_TEAM_NOTICE = async ({
 }) => {
   return (await API.delete(`/api/notices/${id}`, { data: { postedBy } })).data;
 };
+
+export const LEAVE_TEAM = async ({
+  teamId,
+  reason,
+}: {
+  teamId: string;
+  reason: string;
+}) => {
+  return (
+    await API.put(`/api/teams/${teamId}/leave`, {
+      reason,
+    })
+  ).data;
+};

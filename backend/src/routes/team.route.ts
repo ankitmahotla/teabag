@@ -16,6 +16,7 @@ import {
   withdrawTeamJoiningRequest,
   teamLeadershipTransferResponse,
   getPendingTeamLeadershipTransferRequests,
+  leaveTeam,
 } from "../controllers/team.controller";
 
 const router = Router();
@@ -34,6 +35,7 @@ router.get("/:teamId/members", getTeamMembers);
 router.post("/:teamId/request-join", requestToJoinTeam);
 router.put("/:teamId/request-join", withdrawTeamJoiningRequest);
 router.put("/:teamId/toggle-publish", togglePublishTeam);
+router.put("/:teamId/leave", leaveTeam);
 router.get("/:teamId/pending-requests", getPendingTeamJoinRequests);
 router.put("/:teamId/requests/:requestId/status", updateTeamJoinRequestStatus);
 router.post("/:teamId/disband", disbandTeam);

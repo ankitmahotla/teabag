@@ -2,6 +2,7 @@ import {
   CREATE_TEAM,
   DISBAND_TEAM,
   KICK_TEAM_MEMBER,
+  LEAVE_TEAM,
   REQUEST_TEAM_JOIN,
   TEAM_LEADERSHIP_TRANSFER_REQUEST,
   TEAM_LEADERSHIP_TRANSFER_RESPONSE,
@@ -200,5 +201,19 @@ export const usePendingTeamLeadershipTransfersSync = () => {
   return useQuery({
     queryKey: ["pendingLeadershipTransfers"],
     queryFn: GET_PENDING_TEAM_LEADERSHIP_TRANSFERS,
+  });
+};
+
+export const useLeaveTeamSync = (teamId: string) => {
+  return useMutation({
+    mutationFn: LEAVE_TEAM,
+    onSuccess: () => {
+      toast.success("Team left successfully");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["team", teamId],
+      });
+    },
   });
 };
