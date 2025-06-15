@@ -156,7 +156,7 @@ export const useKickTeamMemberSync = (teamId: string) => {
   return useMutation({
     mutationFn: KICK_TEAM_MEMBER,
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["teamMembers", teamId] });
+      queryClient.invalidateQueries({ queryKey: ["team", teamId] });
     },
     onSuccess: () => {
       toast.success("Team member kicked successfully");

@@ -39,6 +39,7 @@ export const Team = () => {
               {team.members.map((member: Member) => (
                 <TeamMember
                   key={member.userId}
+                  teamId={team.id}
                   userId={member.userId}
                   leaderId={team.leaderId}
                 />
