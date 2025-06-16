@@ -141,10 +141,11 @@ export const createTeam = asyncHandler(async (req: Request, res: Response) => {
         and(
           eq(teamMemberships.userId, user.id),
           eq(teams.cohortId, cohortId),
+          isNull(teamMemberships.leftAt),
           isNull(teams.disbandedAt),
         ),
       );
-
+    console.log(existingTeamInCohort);
     if (existingTeamInCohort.length > 0) {
       return res
         .status(400)
