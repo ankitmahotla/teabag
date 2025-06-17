@@ -36,9 +36,6 @@ jobs:
       - name: Build Next.js app
         run: bun run build
 
-      - name: Export static site
-        run: bun run export
-
       - name: List output files (debug)
         run: ls -al out
 
