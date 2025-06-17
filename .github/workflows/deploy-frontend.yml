@@ -8,6 +8,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     environment: production
 
     steps:
@@ -21,6 +24,9 @@ jobs:
 
       - name: Install Bun
         run: npm install -g bun
+
+      - name: Print Bun version (debug)
+        run: bun --version
 
       - name: Install dependencies
         run: bun install
