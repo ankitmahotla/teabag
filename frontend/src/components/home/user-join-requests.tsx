@@ -1,5 +1,6 @@
 import useSpaceStore from "@/store/space";
 import { useGetUserTeamJoiningRequestsByCohortSync } from "@/sync/user";
+import { JoinRequest } from "@/types/request";
 import _ from "lodash";
 import { AlertCircle, Users } from "lucide-react";
 import Link from "next/link";
@@ -18,7 +19,7 @@ export const UserPendingRequests = () => {
 
       <div className="space-y-4">
         {requests.length ? (
-          requests.map((req) => {
+          requests.map((req: JoinRequest) => {
             const statusColor =
               req.status === "pending"
                 ? "text-yellow-700"

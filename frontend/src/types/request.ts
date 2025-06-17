@@ -3,6 +3,7 @@ export type JoinRequest = {
   userId: string;
   name: string;
   teamId: string;
+  teamName: string;
   status: string;
   note: string;
   createdAt: string;
