@@ -1,0 +1,54 @@
+name: Deploy
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
+      - name: Install Bun
+        run: npm install -g bun
+
+      - name: Install dependencies
+        run: bun install
+        working-directory: frontend
+
+      - name: Build Next.js app
+        run: bun run build
+        working-directory: frontend
+
+      - name: Export static site
+        run: bun run export
+        working-directory: frontend
+
+      - name: Deploy to S3
+        uses: jakejarvis/s3-sync-action@v0.5.1
+        with:
+          args: --delete
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SOURCE_DIR: "frontend/out"
+
+      # - name: Invalidate CloudFront Cache
+      #   uses: chetan/invalidate-cloudfront-action@v2
+      #   env:
+      #     AWS_REGION: "us-east-1"
+      #     DISTRIBUTION: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+      #     PATHS: "/*"
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
