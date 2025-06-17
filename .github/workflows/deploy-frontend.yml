@@ -23,22 +23,24 @@ jobs:
           node-version: "20"
 
       - name: Install Bun
-        run: npm install -g bun
+        run: |
+          curl -fsSL https://bun.sh/install | bash
+          echo "$HOME/.bun/bin" >> $GITHUB_PATH
 
       - name: Print Bun version (debug)
         run: bun --version
 
       - name: Install dependencies
         run: bun install
-        working-directory: frontend
 
       - name: Build Next.js app
         run: bun run build
-        working-directory: frontend
 
       - name: Export static site
         run: bun run export
-        working-directory: frontend
+
+      - name: List output files (debug)
+        run: ls -al out
 
       - name: Deploy to S3
         uses: jakejarvis/s3-sync-action@v0.5.1
