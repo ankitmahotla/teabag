@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/form";
 import { UploadCloud } from "lucide-react";
 import { useUploadCSVSync } from "@/sync/admin";
-import { Spinner } from "../spinner";
 
 type FormValues = {
   file: File | null;
@@ -44,8 +43,6 @@ export default function CsvUploadForm() {
     }
   }, [file, form]);
 
-  if (isPending) return <Spinner />;
-
   return (
     <Form {...form}>
       <form className="space-y-4">
@@ -68,6 +65,7 @@ export default function CsvUploadForm() {
               />
               <Button
                 type="button"
+                disabled={isPending}
                 onClick={() => fileInputRef.current?.click()}
               >
                 <UploadCloud size={16} className="mr-2" />
