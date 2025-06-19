@@ -15,23 +15,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "latest"
-
-      - name: Cache Bun dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('backend/bun.lockb') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-
-      - name: Install dependencies
-        run: bun install
-        working-directory: ./backend
-
       - name: Prepare SSH key
         run: |
           mkdir -p ~/.ssh
@@ -66,8 +49,8 @@ jobs:
             bun install
 
             # Kill any existing Bun process running server.js (adjust if needed)
-            pkill -f "bun run src/server.js" || true
-            nohup bun run src/server.js &
+            pkill -f "bun run src/server.ts" || true
+            nohup bun run src/server.ts &
 
             # Reload Caddy instead of Nginx
             sudo systemctl reload caddy
