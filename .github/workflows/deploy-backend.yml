@@ -50,7 +50,7 @@ jobs:
 
             # Kill any existing Bun process running server.js (adjust if needed)
             pkill -f "bun run src/index.ts" || true
-            nohup bun run src/server.ts > backend.log 2>&1 &
+            nohup bun run src/index.ts > backend.log 2>&1 &
 
             # Reload Caddy instead of Nginx
             sudo systemctl reload caddy
