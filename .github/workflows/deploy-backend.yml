@@ -34,11 +34,11 @@ jobs:
             # Ensure Bun is installed
             if ! command -v bun &> /dev/null; then
               curl -fsSL https://bun.sh/install | bash
-              export BUN_INSTALL="$HOME/.bun"
-              export PATH="$BUN_INSTALL/bin:$PATH"
+              export BUN_INSTALL="\$HOME/.bun"
+              export PATH="\$BUN_INSTALL/bin:\$PATH"
             else
-              export BUN_INSTALL="$HOME/.bun"
-              export PATH="$BUN_INSTALL/bin:$PATH"
+              export BUN_INSTALL="\$HOME/.bun"
+              export PATH="\$BUN_INSTALL/bin:\$PATH"
             fi
 
             cd ~/backend
@@ -48,9 +48,15 @@ jobs:
 
             bun install
 
-            # Kill any existing Bun process running server.js (adjust if needed)
-            pkill -f "bun run src/index.ts" || true
-            nohup bun run src/index.ts > backend.log 2>&1 &
+            # Kill any existing Bun process running index.ts
+            pkill -f "bun src/index.ts" || true
+
+            # Start the server and log output
+            nohup bun src/index.ts > backend.log 2>&1 &
+
+            # Give the server a second to start, then show logs
+            sleep 2
+            tail -n 10 backend.log
 
             # Reload Caddy instead of Nginx
             sudo systemctl reload caddy
