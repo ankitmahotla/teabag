@@ -60,6 +60,9 @@ jobs:
 
             cd ~/backend
 
+            # Recreate .env file from GitHub Secret
+            echo "${{ secrets.BACKEND_ENV_FILE }}" > .env
+
             bun install
 
             # Kill any existing Bun process running server.js (adjust if needed)
