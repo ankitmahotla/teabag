@@ -1,0 +1,74 @@
+name: Deploy Backend
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  deploy:
+    name: Deploy Backend
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "latest"
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('backend/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install
+        working-directory: ./backend
+
+      - name: Prepare SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy backend to EC2 via SSH
+        run: |
+          rsync -avz --delete --exclude '.git*' ./backend/ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/backend/
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            export AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}
+            export AWS_SECRET_STORAGE_NAME=growthify-secrets
+
+            # Ensure Bun is installed
+            if ! command -v bun &> /dev/null; then
+              curl -fsSL https://bun.sh/install | bash
+              export BUN_INSTALL="$HOME/.bun"
+              export PATH="$BUN_INSTALL/bin:$PATH"
+            else
+              export BUN_INSTALL="$HOME/.bun"
+              export PATH="$BUN_INSTALL/bin:$PATH"
+            fi
+
+            cd ~/backend
+
+            bun install
+
+            # Kill any existing Bun process running server.js (adjust if needed)
+            pkill -f "bun run src/server.js" || true
+            nohup bun run src/server.js &
+
+            # Reload Caddy instead of Nginx
+            sudo systemctl reload caddy
+          EOF
+
+      - name: Clean up SSH key
+        run: rm -f ~/.ssh/id_rsa
