@@ -52,6 +52,7 @@ jobs:
             # === Frontend (Next.js) ===
             cd ~/frontend
             echo "${{ secrets.FRONTEND_ENV_FILE }}" > .env
+            rm -rf .next
             bun install
             bun run build
             pm2 delete frontend || true
