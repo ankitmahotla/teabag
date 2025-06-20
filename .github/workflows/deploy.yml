@@ -14,6 +14,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install and build frontend
+        working-directory: ./frontend
+        run: |
+          bun install
+          bun run build
+
       - name: Prepare SSH key
         run: |
           mkdir -p ~/.ssh
@@ -23,13 +32,15 @@ jobs:
 
       - name: Deploy to EC2
         run: |
-          # Sync backend
+          # === Sync Backend (same as before) ===
           rsync -avz --delete --exclude '.git*' --exclude 'node_modules' ./backend/ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/backend/
 
-          # Sync frontend (Next.js)
-          rsync -avz --delete --exclude '.git*' --exclude 'node_modules' ./frontend/ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/frontend/
+          # === Sync Built Frontend Output ===
+          rsync -avz --delete ./frontend/.next ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/frontend/
+          rsync -avz --delete ./frontend/public ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/frontend/
+          rsync -avz ./frontend/package.json ./frontend/bun.lock ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/frontend/
 
-          # Run deploy commands via SSH
+          # === Run Remote Commands on EC2 ===
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             # Load NVM and Bun
             export NVM_DIR="$HOME/.nvm"
@@ -49,12 +60,9 @@ jobs:
             pm2 delete backend || true
             pm2 start "bun run src/index.ts" --name backend
 
-            # === Frontend (Next.js) ===
+            # === Frontend ===
             cd ~/frontend
             echo "${{ secrets.FRONTEND_ENV_FILE }}" > .env
-            rm -rf .next
-            bun install
-            bun run build
             pm2 delete frontend || true
             pm2 start "bun run start" --name frontend
 
