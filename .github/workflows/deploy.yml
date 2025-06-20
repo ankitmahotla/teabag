@@ -23,6 +23,9 @@ jobs:
           bun install
           bun run build
 
+      - name: Compress frontend build
+        run: tar -czf frontend-build.tar.gz -C frontend .next
+
       - name: Prepare SSH key
         run: |
           mkdir -p ~/.ssh
@@ -35,8 +38,10 @@ jobs:
           # === Sync Backend (same as before) ===
           rsync -avz --delete --exclude '.git*' --exclude 'node_modules' ./backend/ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/backend/
 
-          # === Sync Built Frontend Output ===
-          rsync -avz --delete ./frontend/.next ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/frontend/
+          # === Upload tar.gz of .next ===
+          rsync -avz frontend-build.tar.gz ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/frontend/
+
+          # === Upload other frontend files ===
           rsync -avz --delete ./frontend/public ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/frontend/
           rsync -avz ./frontend/package.json ./frontend/bun.lock ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/frontend/
 
@@ -63,6 +68,11 @@ jobs:
             # === Frontend ===
             cd ~/frontend
             echo "${{ secrets.FRONTEND_ENV_FILE }}" > .env
+
+            # Extract the .next tarball
+            tar -xzf frontend-build.tar.gz
+            rm frontend-build.tar.gz
+
             pm2 delete frontend || true
             pm2 start "bun run start" --name frontend
 
