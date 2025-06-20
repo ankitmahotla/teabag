@@ -1,0 +1,53 @@
+name: Deploy Backend
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare SSH key
+        run: |
+          mkdir -p "$HOME/.ssh"
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > "$HOME/.ssh/id_rsa"
+          chmod 600 "$HOME/.ssh/id_rsa"
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> "$HOME/.ssh/known_hosts"
+
+      - name: Deploy to EC2
+        run: |
+          # === Sync backend only ===
+          rsync -avz --delete --exclude '.git*' --exclude 'node_modules' ./backend/ ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/backend/
+
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            # Load NVM and Bun
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            export BUN_INSTALL="$HOME/.bun"
+            export PATH="$BUN_INSTALL/bin:$PATH:$HOME/.npm-global/bin:$PATH"
+
+            export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            export AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}
+            export AWS_SECRET_STORAGE_NAME=growthify-secrets
+
+            # === Backend setup ===
+            cd ~/backend
+            echo "${{ secrets.BACKEND_ENV_FILE }}" > .env
+            bun install
+            pm2 delete backend || true
+            pm2 start "bun run src/index.ts" --name backend
+            pm2 save
+
+            sudo systemctl reload caddy || true
+          EOF
+
+      - name: Clean up SSH key
+        run: rm -f "$HOME/.ssh/id_rsa"
