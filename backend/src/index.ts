@@ -13,7 +13,11 @@ import type { CorsOptions } from "cors";
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-const whitelist = ["http://localhost:3000", "http://teabag.co.in"];
+const whitelist = [
+  "http://localhost:3000",
+  "https://teabag.co.in",
+  "https://www.teabag.co.in",
+];
 
 const corsOptions: CorsOptions = {
   origin: function (
