@@ -1,3 +1,4 @@
+import axios from "axios";
 import { API } from "./client";
 import { TEAM_CREATE } from "@/types/team";
 
@@ -19,9 +20,13 @@ export const REFRESH_TOKENS = async () => {
 
 export const UPLOAD_CSV = async (formData: FormData) => {
   return (
-    await API.post("/api/admin/upload-csv", formData, {
-      withCredentials: true,
-    })
+    await axios.post(
+      `${process.env.NEXT_PUBLIC_API_ENDPOINT_URL}/api/admin/upload-csv`,
+      formData,
+      {
+        withCredentials: true,
+      },
+    )
   ).data;
 };
 
