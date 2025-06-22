@@ -34,7 +34,9 @@ export const Team = () => {
             <h1 className="text-3xl font-semibold">{team.name}</h1>
             <p className="text-sm text-muted-foreground">{team.description}</p>
             <div className="mt-6">
-              {!isLeader && <LeaveTeamDialog teamId={team.id} />}
+              {!isLeader && (
+                <LeaveTeamDialog cohortId={spaceId!} teamId={team.id} />
+              )}
             </div>
           </div>
           <section className="space-y-4">

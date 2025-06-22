@@ -14,13 +14,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 type LeaveTeamDialogProps = {
+  cohortId: string;
   teamId: string;
 };
 
-export function LeaveTeamDialog({ teamId }: LeaveTeamDialogProps) {
+export function LeaveTeamDialog({ cohortId, teamId }: LeaveTeamDialogProps) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
-  const { mutate, isPending } = useLeaveTeamSync(teamId);
+  const { mutate, isPending } = useLeaveTeamSync(cohortId, teamId);
   const router = useRouter();
 
   const handleLeave = async () => {

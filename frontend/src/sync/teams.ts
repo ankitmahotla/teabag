@@ -220,16 +220,18 @@ export const usePendingTeamLeadershipTransfersSync = () => {
   });
 };
 
-export const useLeaveTeamSync = (teamId: string) => {
+export const useLeaveTeamSync = (cohortId: string, teamId: string) => {
   return useMutation({
     mutationFn: LEAVE_TEAM,
     onSuccess: () => {
       toast.success("Team left successfully");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["team", teamId],
+      queryClient.refetchQueries({
+        queryKey: ["userTeam", cohortId],
+        exact: true,
       });
+      queryClient.refetchQueries({ queryKey: ["team", teamId], exact: true });
     },
   });
 };
