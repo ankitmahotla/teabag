@@ -1049,7 +1049,7 @@ export const leaveTeam = asyncHandler(async (req: Request, res: Response) => {
       await tx
         .update(teamMemberships)
         .set({ leftAt: new Date(), leftReason: reason })
-        .where(eq(teamMemberships.id, user.id));
+        .where(eq(teamMemberships.id, teamMember.id));
 
       await tx.insert(userInteractions).values({
         userId: user.id,
