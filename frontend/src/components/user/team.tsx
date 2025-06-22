@@ -74,7 +74,12 @@ export const Team = () => {
                 >
                   {isPublished ? "Unpublish Team" : "Publish Team"}
                 </Button>
-                {spaceId && <DisbandTeamModal teamId={teamId as string} />}
+                {spaceId && (
+                  <DisbandTeamModal
+                    cohortId={spaceId}
+                    teamId={teamId as string}
+                  />
+                )}
               </div>
               <div className="space-y-4 border-t pt-6">
                 <h2 className="text-lg font-semibold">Join Requests</h2>

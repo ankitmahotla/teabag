@@ -26,12 +26,18 @@ import {
 } from "@/components/ui/select";
 import { useSessionStore } from "@/store/session";
 import { Member } from "@/types/team";
+import { useRouter } from "next/navigation";
 
 interface DisbandTeamDialogProps {
+  cohortId: string;
   teamId: string;
 }
 
-export const DisbandTeamModal = ({ teamId }: DisbandTeamDialogProps) => {
+export const DisbandTeamModal = ({
+  cohortId,
+  teamId,
+}: DisbandTeamDialogProps) => {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [action, setAction] = useState<"disband" | "transfer">("disband");
@@ -42,7 +48,7 @@ export const DisbandTeamModal = ({ teamId }: DisbandTeamDialogProps) => {
   const teamMembers =
     data?.members?.filter((member: Member) => member.userId !== user?.id) ?? [];
 
-  const { mutate: disbandTeam } = useDisbandTeamSync(teamId);
+  const { mutate: disbandTeam } = useDisbandTeamSync(cohortId, teamId);
   const { mutate: transferLeadership } = useTeamLeaderShipTransferRequestSync();
 
   const handleAction = () => {
@@ -50,6 +56,7 @@ export const DisbandTeamModal = ({ teamId }: DisbandTeamDialogProps) => {
 
     if (action === "disband") {
       disbandTeam({ teamId, reason: reason.trim() });
+      router.push("/");
     }
 
     if (action === "transfer") {

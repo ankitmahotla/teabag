@@ -25,7 +25,7 @@ const formSchema = z.object({
 
 export const CreateTeam = () => {
   const { spaceId } = useSpaceStore();
-  const { mutate } = useCreateTeamSync();
+  const { mutate } = useCreateTeamSync(spaceId!);
   const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -47,7 +47,7 @@ export const CreateTeam = () => {
         {
           onSuccess: () => {
             form.reset();
-            router.push("/teams");
+            router.push("/");
           },
         },
       );

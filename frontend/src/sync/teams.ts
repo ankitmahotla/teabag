@@ -41,6 +41,8 @@ export const useGetUserTeamByCohortSync = (cohortId: string) => {
   return useSuspenseQuery({
     queryKey: ["userTeam", cohortId],
     queryFn: () => GET_USER_TEAM_BY_COHORT(cohortId),
+    staleTime: 0,
+    refetchOnMount: true,
     retry: 1,
   });
 };
@@ -121,7 +123,7 @@ export const useUpdateTeamJoinRequestStatusSync = (teamId: string) => {
   });
 };
 
-export const useCreateTeamSync = () => {
+export const useCreateTeamSync = (cohortId: string) => {
   return useMutation({
     mutationFn: CREATE_TEAM,
     onError: (err) => {
@@ -130,14 +132,24 @@ export const useCreateTeamSync = () => {
     onSuccess: () => {
       toast.success("Team created successfully");
     },
+    onSettled: () => {
+      queryClient.refetchQueries({
+        queryKey: ["userTeam", cohortId],
+        exact: true,
+      });
+    },
   });
 };
 
-export const useDisbandTeamSync = (teamId: string) => {
+export const useDisbandTeamSync = (cohortId: string, teamId: string) => {
   return useMutation({
     mutationFn: DISBAND_TEAM,
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["team", teamId] });
+      queryClient.refetchQueries({
+        queryKey: ["userTeam", cohortId],
+        exact: true,
+      });
+      queryClient.refetchQueries({ queryKey: ["team", teamId], exact: true });
     },
     onSuccess: () => {
       toast.success("Team disbanded successfully");
