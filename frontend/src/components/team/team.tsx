@@ -19,6 +19,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import _ from "lodash";
 
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -119,7 +120,11 @@ export const Team = () => {
       {!isMember && (
         <section>
           {requestStatus?.hasRequested ? (
-            requestStatus?.canWithdraw ? (
+            requestStatus?.request.status === "accepted" ? (
+              <Button variant="outline" disabled>
+                {_.capitalize(requestStatus?.request.status)}
+              </Button>
+            ) : requestStatus?.canWithdraw ? (
               <Button onClick={handleWithdraw} variant="outline">
                 Withdraw Request
               </Button>

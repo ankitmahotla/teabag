@@ -1051,6 +1051,15 @@ export const leaveTeam = asyncHandler(async (req: Request, res: Response) => {
         .set({ leftAt: new Date(), leftReason: reason })
         .where(eq(teamMemberships.id, teamMember.id));
 
+      await tx
+        .delete(teamJoinRequests)
+        .where(
+          and(
+            eq(teamJoinRequests.userId, user.id),
+            eq(teamJoinRequests.teamId, teamId),
+          ),
+        );
+
       await tx.insert(userInteractions).values({
         userId: user.id,
         type: "left_team",
