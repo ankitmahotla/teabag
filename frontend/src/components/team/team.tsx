@@ -35,9 +35,7 @@ export const Team = () => {
   const { spaceId } = useSpaceStore();
   const { id: teamId } = useParams();
   const { data: team } = useGetTeamByIdSync(teamId as string);
-  const { data: requestStatus, refetch } = useGetTeamRequestStatusSync(
-    teamId as string,
-  );
+  const { data: requestStatus } = useGetTeamRequestStatusSync(teamId as string);
   const { mutate: requestToJoinTeam } = useRequestToJoinTeamSync(
     teamId as string,
   );
@@ -61,7 +59,6 @@ export const Team = () => {
     });
     setShowNoteInput(false);
     form.reset();
-    refetch();
   };
 
   const handleJoin = () => {

@@ -72,16 +72,20 @@ export const useRequestToJoinTeamSync = (teamId: string) => {
       console.error(error);
     },
     onSettled: () => {
+      queryClient.refetchQueries({
+        queryKey: ["requestStatus", teamId],
+        exact: true,
+      });
       queryClient.invalidateQueries({ queryKey: ["team", teamId] });
     },
   });
 };
 
-export const useGetTeamRequestStatusSync = (requestId: string) => {
-  const isEnabled = Boolean(requestId);
+export const useGetTeamRequestStatusSync = (teamId: string) => {
+  const isEnabled = Boolean(teamId);
   return useQuery({
-    queryKey: ["requestStatus", requestId],
-    queryFn: () => GET_TEAM_REQUEST_STATUS(requestId),
+    queryKey: ["requestStatus", teamId],
+    queryFn: () => GET_TEAM_REQUEST_STATUS(teamId),
     enabled: isEnabled,
   });
 };
