@@ -2,6 +2,7 @@ import { useParams } from "next/navigation";
 import {
   useGetTeamByIdSync,
   useGetTeamRequestStatusSync,
+  useGetUserTeamByCohortSync,
   useRequestToJoinTeamSync,
   useWithdrawTeamJoiningRequestSync,
 } from "@/sync/teams";
@@ -35,6 +36,7 @@ export const Team = () => {
   const { user } = useSessionStore();
   const { spaceId } = useSpaceStore();
   const { id: teamId } = useParams();
+  const { data: userTeam } = useGetUserTeamByCohortSync(spaceId!);
   const { data: team } = useGetTeamByIdSync(teamId as string);
   const { data: requestStatus } = useGetTeamRequestStatusSync(teamId as string);
   const { mutate: requestToJoinTeam } = useRequestToJoinTeamSync(
@@ -117,7 +119,7 @@ export const Team = () => {
         </Form>
       )}
 
-      {!isMember && (
+      {!userTeam && !isMember && (
         <section>
           {requestStatus?.hasRequested ? (
             requestStatus?.request.status === "accepted" ? (
