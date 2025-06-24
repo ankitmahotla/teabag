@@ -259,6 +259,22 @@ export const requestToJoinTeam = asyncHandler(
     }
 
     try {
+      const userTeam = await db
+        .select()
+        .from(teamMemberships)
+        .where(
+          and(
+            eq(teamMemberships.userId, user.id),
+            eq(teamMemberships.cohortId, cohortId),
+            isNull(teamMemberships.leftAt),
+          ),
+        );
+
+      if (userTeam.length > 0) {
+        return res.status(400).json({
+          error: "User already member of a team in this cohort ",
+        });
+      }
       const team = await db
         .select()
         .from(teams)
