@@ -3,16 +3,20 @@
 import { TeamOverview } from "@/components/home/team-overview";
 import { UserPendingRequests } from "@/components/home/user-join-requests";
 import { Button } from "@/components/ui/button";
+import useSpaceStore from "@/store/space";
 import { Loader, Rocket } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 export default function HomePage() {
+  const { spaceId } = useSpaceStore();
+  if (!spaceId) return null;
+
   return (
     <Suspense fallback={<Loader className="h-6 w-6 animate-spin" />}>
       <ErrorBoundary fallbackRender={errorFallback}>
-        <TeamOverview />
+        <TeamOverview spaceId={spaceId} />
       </ErrorBoundary>
     </Suspense>
   );

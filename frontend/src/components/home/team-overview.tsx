@@ -3,13 +3,11 @@
 import Link from "next/link";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import useSpaceStore from "@/store/space";
 import { useGetUserTeamByCohortSync } from "@/sync/teams";
 import { RecentNotices } from "./recent-notices";
 
-export const TeamOverview = () => {
-  const { spaceId } = useSpaceStore();
-  const { data } = useGetUserTeamByCohortSync(spaceId!);
+export const TeamOverview = ({ spaceId }: { spaceId: string }) => {
+  const { data } = useGetUserTeamByCohortSync(spaceId);
   const userTeam = data?.teamDetails;
 
   if (!userTeam) return null;
