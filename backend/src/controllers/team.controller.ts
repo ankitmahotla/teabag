@@ -145,7 +145,6 @@ export const createTeam = asyncHandler(async (req: Request, res: Response) => {
           isNull(teams.disbandedAt),
         ),
       );
-    console.log(existingTeamInCohort);
     if (existingTeamInCohort.length > 0) {
       return res
         .status(400)
@@ -153,6 +152,15 @@ export const createTeam = asyncHandler(async (req: Request, res: Response) => {
     }
 
     const result = await db.transaction(async (tx) => {
+      await tx
+        .delete(teamJoinRequests)
+        .where(
+          and(
+            eq(teamJoinRequests.userId, user.id),
+            eq(teamJoinRequests.status, "pending"),
+          ),
+        );
+
       const [newTeam] = await tx
         .insert(teams)
         .values({
