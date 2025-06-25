@@ -70,14 +70,16 @@ export const Team = ({ spaceId }: { spaceId: string }) => {
 
 const UserTeam = ({ spaceId }: { spaceId: string }) => {
   const { data } = useGetUserTeamByCohortSync(spaceId);
-  // if (data) return <div>Already in a team</div>;
+  if (data) return <div>Already in a team</div>;
   return null;
 };
 
 type JoinRequestButtonProps = {
   teamId: string;
   spaceId: string;
-  team: TEAM;
+  team: TEAM & {
+    members: Member[];
+  };
 };
 
 const JoinRequestButton = ({
