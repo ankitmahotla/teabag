@@ -35,30 +35,11 @@ export const getUserById = asyncHandler(async (req: Request, res: Response) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const [userTeam] = await db
-      .select({
-        teamId: teamMemberships.teamId,
-        teamName: teams.name,
-        teamLeaderId: teams.leaderId,
-      })
-      .from(teamMemberships)
-      .innerJoin(teams, eq(teams.id, teamMemberships.teamId))
-      .where(
-        and(
-          eq(teamMemberships.userId, id),
-          isNull(teamMemberships.leftAt),
-          isNull(teams.disbandedAt),
-        ),
-      );
-
     const user = {
       id: userDetail.id,
       email: userDetail.email,
       name: userDetail.name,
       role: userDetail.role,
-      teamId: userTeam ? userTeam.teamId : null,
-      teamName: userTeam ? userTeam.teamName : null,
-      leaderId: userTeam ? userTeam.teamLeaderId : null,
     };
 
     return res.status(200).json({ user });
