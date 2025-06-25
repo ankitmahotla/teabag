@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,27 +25,23 @@ export default function CsvUploadForm() {
     },
   });
 
-  const file = form.watch("file");
-
-  const onSubmit = (data: FormValues) => {
-    if (!data.file) return;
-
-    const formData = new FormData();
-    formData.append("file", data.file);
-
-    mutate(formData);
-    form.reset();
-  };
-
-  useEffect(() => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    form.setValue("file", file, { shouldValidate: true });
     if (file) {
-      form.handleSubmit(onSubmit)();
+      const formData = new FormData();
+      formData.append("file", file);
+      mutate(formData);
+      form.reset();
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
-  }, [file, form]);
+  };
 
   return (
     <Form {...form}>
-      <form className="space-y-4">
+      <form className="space-y-4" autoComplete="off">
         <FormField
           control={form.control}
           name="file"
@@ -58,10 +54,7 @@ export default function CsvUploadForm() {
                 accept=".csv"
                 ref={fileInputRef}
                 style={{ display: "none" }}
-                onChange={(e) => {
-                  const file = e.target.files?.[0] || null;
-                  field.onChange(file);
-                }}
+                onChange={handleFileChange}
               />
               <Button
                 type="button"
