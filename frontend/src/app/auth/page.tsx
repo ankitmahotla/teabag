@@ -1,6 +1,5 @@
 "use client";
 
-import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -32,9 +31,6 @@ export default function SignIn() {
 
   return (
     <div className="flex min-h-screen flex-col p-4">
-      <div className="flex justify-end">
-        <ModeToggle />
-      </div>
       <div className="flex flex-1 items-center justify-center">
         <Card className="w-full max-w-sm border shadow-2xl backdrop-blur-md">
           <CardHeader>
@@ -51,7 +47,6 @@ export default function SignIn() {
               onClick={() => login()}
               className="w-full"
             >
-              {/* <img src="/google-icon.svg" className="h-5 w-5 mr-2" alt="Google" /> */}
               Sign in with Google
             </Button>
           </CardContent>
