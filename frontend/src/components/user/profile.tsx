@@ -4,13 +4,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useGetUserByIdSync } from "@/sync/user";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useGetUserTeamByCohortSync } from "@/sync/teams";
+import { useSessionStore } from "@/store/session";
+import { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 
-export const Profile = () => {
+export const Profile = ({ spaceId }: { spaceId: string }) => {
   const params = useParams();
   const userId = params.id as string;
   const { data } = useGetUserByIdSync(userId);
   const user = data?.user;
-  const isTeamLeader = userId === user?.teamLeaderId;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 space-y-10">
@@ -27,19 +30,33 @@ export const Profile = () => {
         </div>
         <div className="sm:text-right">
           <p className="text-sm text-muted-foreground">Team</p>
-          <Link href={`/teams/${user.teamId}`}>
-            <p className="text-base font-medium leading-tight hover:underline">
-              {user.teamName}
-              <span className="text-muted-foreground">
-                {" "}
-                · {isTeamLeader ? "Leader" : "Member"}
-              </span>
-            </p>
-          </Link>
+          <Suspense fallback={null}>
+            <ErrorBoundary fallback={null}>
+              <UserTeam spaceId={spaceId} />
+            </ErrorBoundary>
+          </Suspense>
         </div>
       </div>
       <Separator />
       <Activity />
     </div>
+  );
+};
+
+const UserTeam = ({ spaceId }: { spaceId: string }) => {
+  const { user } = useSessionStore();
+  const { data: userTeam } = useGetUserTeamByCohortSync(spaceId);
+
+  const isLeader = userTeam.teamDetails.leaderId === user?.id;
+
+  return (
+    <Link href={`/teams/${userTeam.teamDetails.teamId}`}>
+      <p className="text-base font-medium leading-tight hover:underline">
+        {userTeam.teamDetails.name}
+        <span className="text-muted-foreground">
+          · {isLeader ? "Leader" : "Member"}
+        </span>
+      </p>
+    </Link>
   );
 };
