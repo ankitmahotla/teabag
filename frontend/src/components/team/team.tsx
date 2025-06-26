@@ -70,7 +70,7 @@ export const Team = ({ spaceId }: { spaceId: string }) => {
 
 const UserTeam = ({ spaceId }: { spaceId: string }) => {
   const { data } = useGetUserTeamByCohortSync(spaceId);
-  if (data) return <Button disabled={true}>Can't Join</Button>;
+  if (data) return <Button disabled={true}>Can&apos;t Join</Button>;
   return null;
 };
 
