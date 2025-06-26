@@ -11,8 +11,17 @@ export const GET_USER_COHORTS = async (userId?: string) => {
   ).data;
 };
 
-export const GET_USER_TEAM_BY_COHORT = async (cohortId: string) => {
-  return (await API.get(`/api/user/team/${cohortId}`)).data;
+export const GET_USER_TEAM_BY_COHORT = async (
+  cohortId: string,
+  userId?: string,
+) => {
+  return (
+    await API.get(`/api/user/team/${cohortId}`, {
+      params: {
+        userId,
+      },
+    })
+  ).data;
 };
 
 export const GET_COHORT_TEAMS = async (cohortId: string) => {

@@ -5,7 +5,6 @@ import { useGetUserByIdSync } from "@/sync/user";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useGetUserTeamByCohortSync } from "@/sync/teams";
-import { useSessionStore } from "@/store/session";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -32,7 +31,7 @@ export const Profile = ({ spaceId }: { spaceId: string }) => {
           <p className="text-sm text-muted-foreground">Team</p>
           <Suspense fallback={null}>
             <ErrorBoundary fallback={null}>
-              <UserTeam spaceId={spaceId} />
+              <UserTeam spaceId={spaceId} userId={userId} />
             </ErrorBoundary>
           </Suspense>
         </div>
@@ -43,11 +42,16 @@ export const Profile = ({ spaceId }: { spaceId: string }) => {
   );
 };
 
-const UserTeam = ({ spaceId }: { spaceId: string }) => {
-  const { user } = useSessionStore();
-  const { data: userTeam } = useGetUserTeamByCohortSync(spaceId);
+const UserTeam = ({
+  spaceId,
+  userId,
+}: {
+  spaceId: string;
+  userId?: string;
+}) => {
+  const { data: userTeam } = useGetUserTeamByCohortSync(spaceId, userId);
 
-  const isLeader = userTeam.teamDetails.leaderId === user?.id;
+  const isLeader = userTeam.teamDetails.leaderId === userId;
 
   return (
     <Link href={`/teams/${userTeam.teamDetails.teamId}`}>

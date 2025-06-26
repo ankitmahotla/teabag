@@ -37,10 +37,13 @@ export const useGetTeamByIdSync = (teamId: string) => {
   });
 };
 
-export const useGetUserTeamByCohortSync = (cohortId: string) => {
+export const useGetUserTeamByCohortSync = (
+  cohortId: string,
+  userId?: string,
+) => {
   return useSuspenseQuery({
-    queryKey: ["userTeam", cohortId],
-    queryFn: () => GET_USER_TEAM_BY_COHORT(cohortId),
+    queryKey: ["userTeam", cohortId, userId],
+    queryFn: () => GET_USER_TEAM_BY_COHORT(cohortId, userId),
     staleTime: 0,
     refetchOnMount: true,
     retry: 1,

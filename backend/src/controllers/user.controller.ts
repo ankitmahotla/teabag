@@ -80,11 +80,12 @@ export const getUserCohorts = asyncHandler(
 
 export const getUserTeamByCohort = asyncHandler(
   async (req: Request, res: Response) => {
-    const user = req.user;
+    const userId = req.query.userId || req.user.id;
+
     const { cohortId } = req.params;
 
-    if (!user || !user.id) {
-      return res.status(401).json({ error: "Unauthorized" });
+    if (!userId) {
+      return res.status(401).json({ error: "Invalid user id" });
     }
 
     if (!cohortId) {
@@ -106,7 +107,7 @@ export const getUserTeamByCohort = asyncHandler(
         .where(
           and(
             eq(teams.cohortId, cohortId),
-            eq(teamMemberships.userId, user.id),
+            eq(teamMemberships.userId, userId),
             eq(teams.cohortId, cohortId),
             isNull(teamMemberships.leftAt),
             isNull(teams.disbandedAt),
