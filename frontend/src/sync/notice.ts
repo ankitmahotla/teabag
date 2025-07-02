@@ -4,14 +4,30 @@ import {
   DELETE_TEAM_NOTICE,
 } from "@/api/mutation";
 import { GET_TEAM_NOTICES } from "@/api/query";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { PaginatedInteractionsResponse } from "@/types/notice";
+import {
+  useMutation,
+  useQueryClient,
+  useInfiniteQuery,
+  InfiniteData,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 
-export const useTeamNotices = (teamId: string) => {
-  return useQuery({
+export const useTeamNotices = (teamId: string, limit = 10) => {
+  const enabled = typeof teamId === "string" && teamId.trim() !== "";
+
+  return useInfiniteQuery<
+    PaginatedInteractionsResponse,
+    Error,
+    InfiniteData<PaginatedInteractionsResponse>,
+    [string, string],
+    string | undefined
+  >({
     queryKey: ["team-notices", teamId],
-    queryFn: () => GET_TEAM_NOTICES(teamId),
-    enabled: !!teamId,
+    queryFn: ({ pageParam }) => GET_TEAM_NOTICES(teamId, pageParam, limit),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    initialPageParam: undefined,
+    enabled,
   });
 };
 

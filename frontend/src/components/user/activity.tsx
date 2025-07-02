@@ -61,7 +61,6 @@ export const Activity = () => {
           ))
         )}
 
-        {/* 👇 Invisible sentinel to trigger loading more */}
         {hasNextPage && (
           <div ref={ref} className="h-6" aria-hidden="true">
             {isFetchingNextPage && (

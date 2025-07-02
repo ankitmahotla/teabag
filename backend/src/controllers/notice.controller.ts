@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { teamNoticeBoard, teams } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { and, desc, eq, lt } from "drizzle-orm";
 import { asyncHandler } from "../utils/async-handler";
 import { logError } from "../utils/logError";
 
@@ -44,27 +44,6 @@ export const createNotice = asyncHandler(async (req, res) => {
   } catch (e) {
     logError("Error creating notice:", e);
     res.status(500).json({ error: "Failed to create notice" });
-  }
-});
-
-export const getNoticesByTeam = asyncHandler(async (req, res) => {
-  const { teamId } = req.params;
-
-  if (!teamId) {
-    return res.status(400).json({ error: "Team ID is required" });
-  }
-
-  try {
-    const notices = await db
-      .select()
-      .from(teamNoticeBoard)
-      .where(eq(teamNoticeBoard.teamId, teamId))
-      .orderBy(teamNoticeBoard.createdAt);
-
-    res.status(200).json(notices);
-  } catch (e) {
-    logError("Error fetching notices:", e);
-    res.status(500).json({ error: "Failed to fetch notices" });
   }
 });
 
@@ -149,5 +128,43 @@ export const deleteNotice = asyncHandler(async (req, res) => {
   } catch (e) {
     logError("Error deleting notice:", e);
     res.status(500).json({ error: "Failed to delete notice" });
+  }
+});
+
+export const getNoticesByTeam = asyncHandler(async (req, res) => {
+  const { teamId } = req.params;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const cursor = req.query.cursor as string | undefined;
+
+  if (!teamId) {
+    return res.status(400).json({ error: "Team ID is required" });
+  }
+
+  try {
+    const conditions = [eq(teamNoticeBoard.teamId, teamId)];
+
+    if (cursor) {
+      conditions.push(lt(teamNoticeBoard.createdAt, new Date(cursor)));
+    }
+
+    const results = await db
+      .select()
+      .from(teamNoticeBoard)
+      .where(and(...conditions))
+      .orderBy(desc(teamNoticeBoard.createdAt))
+      .limit(limit + 1);
+
+    const hasMore = results.length > limit;
+    const data = hasMore ? results.slice(0, -1) : results;
+    const lastItem = data[data.length - 1];
+    const nextCursor =
+      hasMore && lastItem?.createdAt
+        ? new Date(lastItem.createdAt).toISOString()
+        : null;
+
+    return res.status(200).json({ data, nextCursor });
+  } catch (e) {
+    logError("Error fetching notices:", e);
+    res.status(500).json({ error: "Failed to fetch notices" });
   }
 });

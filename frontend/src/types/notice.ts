@@ -5,3 +5,8 @@ export type Notice = {
   postedBy: string;
   teamId: string;
 };
+
+export type PaginatedInteractionsResponse = {
+  data: Notice[];
+  nextCursor: string | null;
+};
