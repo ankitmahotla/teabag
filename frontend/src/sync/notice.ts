@@ -4,7 +4,7 @@ import {
   DELETE_TEAM_NOTICE,
 } from "@/api/mutation";
 import { GET_TEAM_NOTICES } from "@/api/query";
-import { PaginatedInteractionsResponse } from "@/types/notice";
+import { PaginatedNoticesResponse } from "@/types/notice";
 import {
   useMutation,
   useQueryClient,
@@ -17,9 +17,9 @@ export const useTeamNotices = (teamId: string, limit = 10) => {
   const enabled = typeof teamId === "string" && teamId.trim() !== "";
 
   return useInfiniteQuery<
-    PaginatedInteractionsResponse,
+    PaginatedNoticesResponse,
     Error,
-    InfiniteData<PaginatedInteractionsResponse>,
+    InfiniteData<PaginatedNoticesResponse>,
     [string, string],
     string | undefined
   >({

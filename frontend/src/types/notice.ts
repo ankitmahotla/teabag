@@ -6,7 +6,7 @@ export type Notice = {
   teamId: string;
 };
 
-export type PaginatedInteractionsResponse = {
+export type PaginatedNoticesResponse = {
   data: Notice[];
   nextCursor: string | null;
 };
