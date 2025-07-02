@@ -1,5 +1,6 @@
-import { PaginatedInteractionsResponse } from "@/types/notice";
 import { API } from "./client";
+import { PaginatedNoticesResponse } from "@/types/notice";
+import { PaginatedInteractionsResponse } from "@/types/user";
 
 export const GET_USER_COHORTS = async (userId?: string) => {
   return (
@@ -88,7 +89,7 @@ export const GET_TEAM_NOTICES = async (
   teamId: string,
   cursor?: string,
   limit = 10,
-): Promise<PaginatedInteractionsResponse> => {
+): Promise<PaginatedNoticesResponse> => {
   const params = new URLSearchParams();
   if (cursor) params.append("cursor", cursor);
   params.append("limit", limit.toString());
