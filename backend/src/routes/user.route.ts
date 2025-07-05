@@ -12,7 +12,7 @@ const router = Router();
 
 router.use(authenticate);
 
-router.get("/cohorts", getUserCohorts);
+router.get("/:id/cohorts", getUserCohorts);
 router.get("/:id", getUserById);
 router.get("/:id/interactions", getUserInteractions);
 router.get("/team/:cohortId", getUserTeamByCohort);

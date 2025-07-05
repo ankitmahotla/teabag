@@ -3,13 +3,7 @@ import { PaginatedNoticesResponse } from "@/types/notice";
 import { PaginatedInteractionsResponse } from "@/types/user";
 
 export const GET_USER_COHORTS = async (userId?: string) => {
-  return (
-    await API.get("/api/user/cohorts", {
-      params: {
-        userId,
-      },
-    })
-  ).data;
+  return (await API.get(`/api/users/${userId}/cohorts`)).data;
 };
 
 export const GET_USER_TEAM_BY_COHORT = async (
@@ -17,7 +11,7 @@ export const GET_USER_TEAM_BY_COHORT = async (
   userId?: string,
 ) => {
   return (
-    await API.get(`/api/user/team/${cohortId}`, {
+    await API.get(`/api/users/team/${cohortId}`, {
       params: {
         userId,
       },
@@ -40,7 +34,7 @@ export const GET_TEAM_BY_ID = async (teamId: string) => {
 };
 
 export const GET_USER_BY_ID = async (userId: string) => {
-  return (await API.get(`/api/user/${userId}`)).data;
+  return (await API.get(`/api/users/${userId}`)).data;
 };
 
 export const GET_TEAM_REQUEST_STATUS = async (teamId: string) => {
@@ -51,7 +45,7 @@ export const GET_USER_TEAM_JOINING_REQUESTS_BY_COHORT = async (
   cohortId: string,
 ) => {
   return (
-    await API.get(`/api/user/requests/${cohortId}`, {
+    await API.get(`/api/users/requests/${cohortId}`, {
       params: {
         cohortId,
       },
@@ -81,7 +75,7 @@ export const GET_USER_INTERACTIONS = async (
   if (cursor) params.append("cursor", cursor);
   params.append("limit", limit.toString());
 
-  const res = await API.get(`/api/user/${userId}/interactions?${params}`);
+  const res = await API.get(`/api/users/${userId}/interactions?${params}`);
   return res.data;
 };
 
