@@ -36,7 +36,7 @@ export const TeamMember = ({
 
   return (
     <div className="flex items-center justify-between p-4 border rounded-md">
-      <Link href={`/user/${user.id}`} className="flex items-center gap-3">
+      <Link href={`/users/${user.id}`} className="flex items-center gap-3">
         <Avatar className="h-8 w-8">
           <AvatarFallback>{user.name?.[0]}</AvatarFallback>
         </Avatar>

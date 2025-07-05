@@ -60,21 +60,24 @@ export default function PrivateLayout({
                     <Link href="/">Home</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
-                {paths.map((path) => (
-                  <span
-                    key={path}
-                    className="inline-flex justify-center items-center"
-                  >
-                    <BreadcrumbSeparator className="hidden md:block mr-2" />
-                    <BreadcrumbItem>
-                      <BreadcrumbLink asChild>
-                        <Link href={`/${path}`} replace>
-                          {_.capitalize(path)}
-                        </Link>
-                      </BreadcrumbLink>
-                    </BreadcrumbItem>
-                  </span>
-                ))}
+                {paths.map((path, idx) => {
+                  const href = "/" + paths.slice(0, idx + 1).join("/");
+                  return (
+                    <span
+                      key={href}
+                      className="inline-flex justify-center items-center"
+                    >
+                      <BreadcrumbSeparator className="hidden md:block mr-2" />
+                      <BreadcrumbItem>
+                        <BreadcrumbLink asChild>
+                          <Link href={href} replace>
+                            {_.capitalize(path)}
+                          </Link>
+                        </BreadcrumbLink>
+                      </BreadcrumbItem>
+                    </span>
+                  );
+                })}
               </BreadcrumbList>
             </Breadcrumb>
           </div>

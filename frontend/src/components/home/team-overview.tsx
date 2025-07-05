@@ -23,7 +23,7 @@ export const TeamOverview = ({ spaceId }: { spaceId: string }) => {
                 {userTeam.description}
               </p>
             </div>
-            <Link href={`/user/team/${userTeam?.teamId}`}>
+            <Link href={`teams/${userTeam?.teamId}`}>
               <Button size="sm">Go to Team</Button>
             </Link>
           </CardHeader>
