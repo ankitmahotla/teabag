@@ -130,7 +130,7 @@ export const useUpdateTeamJoinRequestStatusSync = (teamId: string) => {
   });
 };
 
-export const useCreateTeamSync = (cohortId: string) => {
+export const useCreateTeamSync = (cohortId: string, userId?: string) => {
   return useMutation({
     mutationFn: CREATE_TEAM,
     onError: (err) => {
@@ -140,8 +140,12 @@ export const useCreateTeamSync = (cohortId: string) => {
       toast.success("Team created successfully");
     },
     onSettled: () => {
-      queryClient.refetchQueries({
+      queryClient.invalidateQueries({
         queryKey: ["userTeam", cohortId],
+        exact: true,
+      });
+      queryClient.refetchQueries({
+        queryKey: ["userTeam", cohortId, userId],
         exact: true,
       });
     },

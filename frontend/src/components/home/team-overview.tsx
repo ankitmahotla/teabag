@@ -5,9 +5,11 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useGetUserTeamByCohortSync } from "@/sync/teams";
 import { RecentNotices } from "./recent-notices";
+import { useSessionStore } from "@/store/session";
 
 export const TeamOverview = ({ spaceId }: { spaceId: string }) => {
-  const { data } = useGetUserTeamByCohortSync(spaceId);
+  const { user } = useSessionStore();
+  const { data } = useGetUserTeamByCohortSync(spaceId, user?.id);
   const userTeam = data?.teamDetails;
 
   if (!userTeam) return null;

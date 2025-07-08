@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCreateTeamSync } from "@/sync/teams";
 import { useRouter } from "next/navigation";
 import { Rocket } from "lucide-react";
+import { useSessionStore } from "@/store/session";
 
 const formSchema = z.object({
   name: z.string().min(2).max(50),
@@ -24,8 +25,9 @@ const formSchema = z.object({
 });
 
 export const CreateTeam = () => {
+  const { user } = useSessionStore();
   const { spaceId } = useSpaceStore();
-  const { mutate } = useCreateTeamSync(spaceId!);
+  const { mutate } = useCreateTeamSync(spaceId!, user?.id);
   const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
