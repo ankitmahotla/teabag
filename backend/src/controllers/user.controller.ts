@@ -10,7 +10,7 @@ import {
   userInteractions,
   users,
 } from "../db/schema";
-import { and, desc, eq, isNull, lt } from "drizzle-orm";
+import { and, desc, eq, isNotNull, isNull, lt } from "drizzle-orm";
 import { logError } from "../utils/logError";
 
 export const getUserById = asyncHandler(async (req: Request, res: Response) => {
@@ -215,6 +215,65 @@ export const getUserInteractions = asyncHandler(
     } catch (e) {
       logError("Error fetching user interactions:", e);
       return res.status(500).json({ error: "Failed to fetch interactions" });
+    }
+  },
+);
+
+export const getUsersInCohort = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { cohortId } = req.params;
+    const limit = Math.max(parseInt(req.query.limit as string) || 10, 1);
+    const cursor = req.query.cursor as string | undefined;
+
+    // Validate cohortId
+    if (!cohortId || typeof cohortId !== "string") {
+      return res
+        .status(400)
+        .json({ error: "Cohort ID is required and must be a string." });
+    }
+
+    try {
+      const conditions = [
+        isNotNull(users.lastLoginAt),
+        eq(cohortMemberships.userId, users.id),
+        eq(cohortMemberships.cohortId, cohortId),
+      ];
+      if (cursor) {
+        const cursorDate = new Date(cursor);
+        if (isNaN(cursorDate.getTime())) {
+          return res.status(400).json({ error: "Invalid cursor format." });
+        }
+        conditions.push(lt(cohortMemberships.createdAt, cursorDate));
+      }
+
+      // Query users with pagination (limit + 1 for hasMore detection)
+      const results = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          name: users.name,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
+        })
+        .from(cohortMemberships)
+        .innerJoin(users, eq(users.id, cohortMemberships.userId))
+        .where(and(...conditions))
+        .orderBy(desc(cohortMemberships.createdAt))
+        .limit(limit + 1);
+
+      // Pagination logic
+      const hasMore = results.length > limit;
+      const data = hasMore ? results.slice(0, limit) : results;
+      const lastItem = data[data.length - 1];
+      const nextCursor =
+        hasMore && lastItem?.createdAt
+          ? new Date(lastItem.createdAt).toISOString()
+          : null;
+
+      return res.status(200).json({ data, nextCursor });
+    } catch (e) {
+      logError("Error fetching users in cohort:", e);
+      return res.status(500).json({ error: "Failed to fetch users in cohort" });
     }
   },
 );

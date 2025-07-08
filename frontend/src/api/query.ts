@@ -1,6 +1,9 @@
 import { API } from "./client";
 import { PaginatedNoticesResponse } from "@/types/notice";
-import { PaginatedInteractionsResponse } from "@/types/user";
+import {
+  PaginatedInteractionsResponse,
+  PaginatedUsersResponse,
+} from "@/types/user";
 
 export const GET_USER_COHORTS = async (userId?: string) => {
   return (await API.get(`/api/users/${userId}/cohorts`)).data;
@@ -89,5 +92,18 @@ export const GET_TEAM_NOTICES = async (
   params.append("limit", limit.toString());
 
   const res = await API.get(`/api/notices/${teamId}?${params}`);
+  return res.data;
+};
+
+export const GET_USERS_IN_COHORT = async (
+  cohortId: string,
+  cursor?: string,
+  limit = 10,
+): Promise<PaginatedUsersResponse> => {
+  const params = new URLSearchParams();
+  if (cursor) params.append("cursor", cursor);
+  params.append("limit", limit.toString());
+
+  const res = await API.get(`/api/users/cohort/${cohortId}?${params}`);
   return res.data;
 };
