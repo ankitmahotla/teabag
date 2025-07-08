@@ -24,7 +24,7 @@ export const Users = ({ cohortId }: { cohortId: string }) => {
   return (
     <div>
       <h2 className="text-lg font-semibold mb-4">All Users</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-96 overflow-y-auto pr-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pr-2">
         {users.length === 0 ? (
           <div className="col-span-full">
             <p className="text-sm text-muted-foreground">No users found</p>
