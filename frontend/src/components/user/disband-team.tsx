@@ -48,15 +48,25 @@ export const DisbandTeamModal = ({
   const teamMembers =
     data?.members?.filter((member: Member) => member.userId !== user?.id) ?? [];
 
-  const { mutate: disbandTeam } = useDisbandTeamSync(cohortId, teamId);
+  const { mutate: disbandTeam } = useDisbandTeamSync(
+    cohortId,
+    teamId,
+    user?.id,
+  );
   const { mutate: transferLeadership } = useTeamLeaderShipTransferRequestSync();
 
   const handleAction = () => {
     if (!reason.trim()) return;
 
     if (action === "disband") {
-      disbandTeam({ teamId, reason: reason.trim() });
-      router.push("/");
+      disbandTeam(
+        { teamId, reason: reason.trim() },
+        {
+          onSuccess: () => {
+            router.push("/");
+          },
+        },
+      );
     }
 
     if (action === "transfer") {
